@@ -1,0 +1,330 @@
+
+.background {
+   -fx-background-color: WHITE;
+}
+.font-size2 {
+  -fx-font-size: 1.2em;
+}
+.font-size3 {
+  -fx-font-size: 1.3em;
+}
+.font-size4 {
+  -fx-font-size: 1.4em;
+}
+.font-size5 {
+  -fx-font-size: 1.5em;
+}
+.font-size7 {
+  -fx-font-size: 1.7em;
+}
+.font-size9 {
+  -fx-font-size: 1.9em;
+}
+.font-size20 {
+  -fx-font-size: 2.0em;
+}
+.font-size25 {
+  -fx-font-size: 2.5em;
+}
+.font-size30 {
+  -fx-font-size: 3.0em;
+}
+.font-size40 {
+  -fx-font-size: 4.0em;
+}
+.font-size50 {
+  -fx-font-size: 5.0em;
+}
+
+
+.font-console {
+  -fx-font-family: 'Consolas';
+}
+.font-red {
+  -fx-text-fill: #c62828;
+}
+.font-pv0 {
+  -fx-font-family: 'Consolas';
+  -fx-text-fill: black;
+}
+.font-pv1 {
+  -fx-font-family: 'Consolas';
+  -fx-background-color: #d32f2f;
+  -fx-text-fill: #ffffff;
+}
+.font-pv2 {
+  -fx-font-family: 'Consolas';
+  -fx-background-color: #1976d2;
+  -fx-text-fill: #ffffff;
+}
+
+
+.btn-raised-0 {
+  -fx-button-type: RAISED;
+  -fx-font-size: 1.3em;
+  -fx-min-height: 3em;
+  -fx-background-color: #c2185b;
+  -fx-text-fill: WHITE;
+}
+.btn-raised-1{
+  -fx-button-type: RAISED;
+  -fx-font-size: 1.3em;
+  -fx-min-height: 3em;
+  -fx-background-color: #aed581;
+  -fx-text-fill: BLACK;
+}
+.btn-raised-2 {
+  -fx-button-type: RAISED;
+  -fx-font-size: 1.3em;
+  -fx-min-height: 3em;
+  -fx-background-color: #4db6ac;
+  -fx-text-fill: BLACK;
+}
+.btn-raised-3 {
+  -fx-button-type: RAISED;
+  -fx-font-size: 1.3em;
+  -fx-min-height: 3em;
+  -fx-background-color: #64b5f6;
+  -fx-text-fill: BLACK;
+}
+
+.btn-raised-10 {
+  -fx-button-type: RAISED;
+  -fx-font-size: 1.1em;
+  -fx-min-height: 1.7em;
+  -fx-border-color: BLACK;
+  -fx-text-fill: BLACK;
+}
+
+.btn-raised-11 {
+  -fx-button-type: RAISED;
+  -fx-font-size: 1.1em;
+  -fx-background-color: WHITE;
+  -fx-text-fill: BLACK;
+  -fx-border-color: BLACK;
+  -fx-border-style: solid;
+  -fx-border-radius: 13px;
+  -fx-border-width : 1.3px;
+}
+
+.red-all {
+  -fx-text-fill: RED;
+  -fx-border-color: RED;
+}
+.dbg-border {
+  -fx-border-color: RED;
+  -fx-border-style: dashed;
+  -fx-border-width: 1.7;
+}
+.black-border {
+  -fx-border-color: BLACK;
+}
+
+.jfx-decorator .jfx-decorator-buttons-container {
+  -fx-background-color: #1e88e5;
+}
+.jfx-decorator .resize-border {
+  -fx-border-color: #1e88e5;
+  -fx-border-width: 0 7 7 7;
+}
+
+.mark-check {
+  -fx-shape: "M384 690l452-452 60 60-512 512-238-238 60-60z";
+  -fx-min-width: 24;
+  -fx-max-width: 24;
+  -fx-min-height: 24;
+  -fx-max-height: 24;
+  -fx-background-color: #0F9D58;
+  -fx-background-radius: 2;
+  -fx-border-width: 0;
+  -fx-border-radius: 2;
+}
+.mark-cross {
+  -fx-shape: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
+  -fx-min-width: 24;
+  -fx-max-width: 24;
+  -fx-min-height: 24;
+  -fx-max-height: 24;
+  -fx-background-color: #c62828;
+  -fx-background-radius: 2;
+  -fx-border-width: 0;
+  -fx-border-radius: 2;
+}
+.mark-box {
+  -fx-min-width: 24;
+  -fx-max-width: 24;
+  -fx-min-height: 24;
+  -fx-max-height: 24;
+  -fx-background-color: TRANSPARENT;
+  -fx-background-radius: 2;
+  -fx-border-color: #5A5A5A;
+  -fx-border-style: solid;
+  -fx-border-radius: 2;
+  -fx-border-width: 2;
+}
+.mark-cycle {
+  -fx-shape: "M 400 100 L 400 100 A 50 50 0 1 1 400 250 A 50 50 0 1 1 400 100 ";
+  -fx-padding: 10;
+  -fx-min-width: 24;
+  -fx-max-width: 24;
+  -fx-min-height: 24;
+  -fx-max-height: 24;
+  -fx-background-color: TRANSPARENT;
+  -fx-background-radius: 2;
+  -fx-border-color: #5A5A5A;
+  -fx-border-style: solid;
+  -fx-border-radius: 2;
+  -fx-border-width: 2;
+}
+
+.mark-selected {
+  /*-fx-background-color: #2969c0;*/
+  -fx-background-radius: 13px;
+  -fx-border-color: #C5C5C5;
+  -fx-border-style: solid;
+  -fx-border-radius: 13px;
+  -fx-border-width : 3px;
+}
+
+.box-pad {
+  -fx-font-size: 1.5em;
+  -fx-spacing: 7px;
+  -fx-padding: 7px;
+  -fx-hgap: 7px;
+  -fx-vgap: 7px;    
+}
+.box-gap {
+  -fx-font-size: 1.5em;
+  -fx-hgap: 7px;
+  -fx-vgap: 7px;    
+}
+
+.box-pad-group {
+  -fx-padding:  13 0 7 0; 
+}
+.box-border {
+  -fx-border-color: black;
+  -fx-border-width: 1px;
+  -fx-border-radius: 3px;
+  -fx-background-radius: 3px;
+}
+
+.titled-pane > .title {
+  -fx-pref-height: 43px;
+  -fx-font-size: 23px;
+}
+
+
+/*.ss1 .list-cell:disabled{
+	-fx-opacity: 1.0;
+}*/
+
+.ss2 .list-cell:filled:selected {
+  -fx-background: -fx-selection-bar;
+}
+
+.text-input.error {
+  -fx-focus-color: #d35244;
+  -fx-faint-focus-color: #d3524422;
+
+  -fx-highlight-fill: -fx-accent;
+  -fx-highlight-text-fill: white;
+  -fx-background-color:
+        -fx-focus-color,
+        -fx-control-inner-background,
+        -fx-faint-focus-color,
+        linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -fx-control-inner-background);
+  -fx-background-insets: -0.2, 1, -1.4, 3;
+  -fx-background-radius: 3, 2, 4, 0;
+  -fx-prompt-text-fill: transparent;
+}
+
+/**********************/
+
+.icons-badge .badge-pane {
+  -fx-background-color: #ff4081;
+  -fx-background-radius: 23;
+  -fx-pref-width: 23;
+  -fx-pref-height: 23;
+  -fx-alignment: center;
+}
+.icons-badge Label {
+  -fx-font-weight: BOLD;
+  -fx-font-size: 12px;
+  -fx-text-fill: WHITE;
+}
+
+/**********************/
+
+.view-mark {
+	-fx-border-width: 4px;
+	-fx-background-color: palegreen;
+	-fx-background-radius: 10;
+	-fx-effect: dropshadow(three-pass-box, black, 10, 0, 0, 0);
+	-fx-padding: 7px;
+	-fx-spacing: 7px;
+}
+
+.flipper-front {
+	-fx-padding: 7, 7, 7, 0;
+	-fx-content-display: top;
+	-fx-border-color: black;
+	-fx-border-width: 1;
+}
+
+.flipper-back {
+	-fx-padding: 7, 7, 7, 0;
+  	-fx-content-display: top;
+  	-fx-border-color: black;
+  	-fx-border-width: 1;
+   	-fx-background-color : lightgray;
+    /*-fx-background-color : linear-gradient(to bottom, rgb(150, 150, 150) 0%, rgb(100, 100, 100) 100%);
+    -fx-background-radius: 5;*/
+    -fx-effect           : dropshadow(gaussian, rgba(0, 0, 0, 0.65), 10, 0.0, 10, 10);
+}
+
+.flipper-icon1 {
+    -fx-pref-width      : 16;
+    -fx-pref-height     : 16;
+    -fx-max-width       : 16;
+    -fx-max-height      : 16;
+    -fx-background-color: black;
+    -fx-scale-shape     : true;
+    -fx-shape           : "M 28 1.9999 L 28 5.3251 L 28 6.8741 L 29.5 7.2617 C 31.1973 7.7002 32.8164 8.3818 34.3125 9.2901 L 35.6543 10.1044 L 36.7637 8.9942 L 39.1426 6.6163 L 43.3848 10.8584 L 40.9258 13.3174 L 39.8428 14.3994 L 40.6055 15.7275 C 41.4512 17.2001 42.084 18.795 42.4843 20.4667 L 42.8524 22 L 44.4297 22 L 47.9999 22 L 47.9999 27.9999 L 44.2598 27.9999 L 42.7373 27.9999 L 42.332 29.4678 C 41.8945 31.0508 41.2383 32.5693 40.3809 33.9815 L 39.5664 35.3242 L 40.6768 36.4335 L 43.3848 39.1417 L 39.1426 43.3837 L 36.3535 40.5958 L 35.2704 39.5126 L 33.9434 40.2753 C 32.5664 41.0673 31.0713 41.6729 29.501 42.0781 L 28 42.4648 L 28 44.0146 L 28 48 L 22 48 L 22 44.0146 L 22 42.4648 L 20.499 42.0781 C 18.9287 41.6729 17.4336 41.0673 16.0566 40.2753 L 14.7285 39.5126 L 13.6465 40.5958 L 10.8574 43.3848 L 6.6152 39.1417 L 9.3232 36.4335 L 10.4336 35.3242 L 9.6191 33.9815 C 8.7617 32.5693 8.1055 31.0508 7.668 29.4678 L 7.2627 27.9999 L 5.7402 27.9999 L 2 27.9999 L 2 22 L 5.5703 22 L 7.1475 22 L 7.5156 20.4667 C 7.916 18.795 8.5488 17.2001 9.3944 15.7275 L 10.1572 14.3994 L 9.0742 13.3174 L 6.6152 10.8584 L 10.8574 6.6163 L 13.2363 8.9942 L 14.3457 10.1044 L 15.6875 9.2901 C 17.1836 8.3818 18.8027 7.7002 20.5 7.2617 L 22 6.8741 L 22 5.3251 L 22 1.9999 L 28 1.9999 M 24.9999 34.002 C 29.9629 34.002 34 29.9639 34 25 C 34 20.0372 29.9629 15.9991 24.9999 15.9991 C 20.037 15.9991 16 20.0372 16 25 C 16 29.9639 20.037 34.002 24.9999 34.002 M 30 0 L 20 0 L 20 5.3251 C 18.0898 5.8184 16.2949 6.5821 14.6504 7.5801 L 10.8574 3.7871 L 3.7871 10.8584 L 7.6602 14.7314 C 6.7256 16.3583 6.0195 18.127 5.5703 19.9999 L 0 19.9999 L 0 29.9999 L 5.7402 29.9999 C 6.2344 31.7881 6.9686 33.4698 7.9092 35.0195 L 3.7871 39.1417 L 10.8574 46.2138 L 15.0605 42.0098 C 16.5917 42.8896 18.249 43.5635 20 44.0146 L 20 49.9999 L 30 49.9999 L 30 44.0146 C 31.751 43.5635 33.4081 42.8896 34.9395 42.0098 L 39.1426 46.2128 L 46.2129 39.1417 L 42.0908 35.0195 C 43.0312 33.4698 43.7656 31.7881 44.2598 29.9999 L 50 29.9999 L 50 19.9999 L 44.4297 19.9999 C 43.9805 18.127 43.2744 16.3583 42.3398 14.7314 L 46.2129 10.8584 L 39.1426 3.7871 L 35.3496 7.5801 C 33.7051 6.5821 31.9102 5.8184 30 5.3251 L 30 0 L 30 0 ZM 24.9999 32.002 C 21.1328 32.002 17.9999 28.8671 17.9999 25 C 17.9999 21.1329 21.1328 17.9991 24.9999 17.9991 C 28.8672 17.9991 32 21.1329 32 25 C 32 28.8671 28.8672 32.002 24.9999 32.002 L 24.9999 32.002 Z";
+}
+.flipper-icon1:pressed {
+    -fx-background-color: #5AC8FA;
+}
+
+.flipper-icon2 {
+    -fx-pref-width      : 16;
+    -fx-pref-height     : 16;
+    -fx-max-width       : 16;
+    -fx-max-height      : 16;
+    -fx-background-color: black;
+    -fx-scale-shape     : true;
+    -fx-shape           : "M 25 50 C 38.8067 50 50 38.8076 50 25 C 50 11.1923 38.8067 -0.0001 25 -0.0001 C 11.1934 -0.0001 0 11.1923 0 25 C 0 38.8076 11.1934 50 25 50 ZM 25 1.9999 C 37.6827 1.9999 48 12.3184 48 25 C 48 37.6817 37.6827 47.9999 25 47.9999 C 12.3174 47.9999 2 37.6817 2 25 C 2 12.3184 12.3174 1.9999 25 1.9999 ZM 14.2365 25.5 L 15.6508 26.9142 L 30.5 41.7635 L 31.9142 40.3492 L 17.065 25.5 L 31.9142 10.6508 L 30.5 9.2365 L 15.6508 24.0858 L 14.2365 25.5 Z";
+}
+.flipper-icon2:pressed {
+    -fx-background-color: #5AC8FA;
+}
+
+.splash-board{
+	-fx-padding: 7;
+	-fx-background-color: #fafafa;
+	-fx-border-width: 2;
+	-fx-border-color: 
+		linear-gradient(
+			to bottom,
+			chocolate,
+			derive(chocolate, 50%)
+		);
+}
+
+.mylistview .scroll-bar:vertical .decrement-button {
+    -fx-background-color:transparent;
+    -fx-background-radius: 0em;
+    -fx-padding:0 10 0 0;
+}
+
+
