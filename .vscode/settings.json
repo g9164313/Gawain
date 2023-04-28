@@ -1,0 +1,18 @@
+{
+	"java.project.referencedLibraries": {
+		"include": [
+			"/home/qq/labor/tools/jfoenix-8.0.8.jar",
+			"/home/qq/labor/tools/tilesFX.jar",
+			"/home/qq/labor/tools/postgresql-9.4.jar",
+			"/home/qq/labor/tools/commons-math3-3.6.1.jar",
+			"/home/qq/labor/tools/jssc-2.9.4.jar",
+			"/home/qq/labor/tools/poi-4.1.2/*.jar",
+			"/home/qq/labor/tools/poi-4.1.2/lib/*.jar",
+			"/home/qq/labor/tools/netty.jar",
+			"/home/qq/labor/tools/netty-all.jar"
+		],
+		"exclude": [
+			"/home/qq/labor/tools/netty-4.1.93.jar"
+		]
+	}
+}

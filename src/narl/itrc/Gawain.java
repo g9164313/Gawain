@@ -21,7 +21,6 @@ import javafx.stage.Stage;
 import narl.itrc.init.Loader;
 import narl.itrc.init.PanSplash;
 
-
 public class Gawain extends Application {
 	
 	private static final Properties propCache = new Properties();

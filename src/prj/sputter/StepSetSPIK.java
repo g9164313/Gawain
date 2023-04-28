@@ -24,7 +24,7 @@ public class StepSetSPIK extends Stepper {
 	
 	public StepSetSPIK(final DevSPIK2k device) {
 		dev = device;
-		chain(op1,run_waiting(3000,null),op2);
+		chain(op1,work_waiting(3000,msg[1]),op2);
 	}
 	
 	final Runnable op1 = ()->{

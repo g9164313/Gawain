@@ -16,9 +16,9 @@ public class StepIgniteRF extends StepCommon {
 		txt_rf.setPrefWidth(100.);
 		txt_dc.setPrefWidth(100.);
 		chain(
-			op1, run_waiting(1000,null),
-			op2, run_waiting(1000,null),
-			op3, run_waiting(1000,null), 
+			op1, work_waiting(1000,msg[1]),
+			op2, work_waiting(1000,msg[1]),
+			op3, work_waiting(1000,msg[1]), 
 			op4, run_holding, op5
 		);
 	}

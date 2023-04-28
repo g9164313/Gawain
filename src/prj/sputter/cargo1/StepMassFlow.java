@@ -18,9 +18,9 @@ public class StepMassFlow extends StepCommon {
 		mfc3_sv.setPrefWidth(100.);
 		chain(
 			op1, 
-			run_waiting(1000,null),
+			work_waiting(1000,msg[1]),
 			op2,
-			run_waiting(500,null),
+			work_waiting(500,msg[1]),
 			op3
 		);
 	}

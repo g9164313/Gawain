@@ -72,15 +72,16 @@ public abstract class PanBase {
 	//txt.setAlignment(Pos.CENTER);
 	//face1 = txt;
 	private static final KeyCombination kb_quit = KeyCombination.keyCombination("Ctrl+ESC");
-	private static final KeyCombination kb_console = KeyCombination.keyCombination("Ctrl+Shift+C");
-	
+	private static final KeyCombination kb_console1 = KeyCombination.keyCombination("Ctrl+W");
+	private static final KeyCombination kb_console2 = KeyCombination.keyCombination("Ctrl+E");
+
 	public void initLayout() {
 		final Node face = eventLayout(this);
 		//StackPane.setAlignment(face, Pos.BOTTOM_LEFT);
-        //StackPane.setAlignment(face, Pos.TOP_RIGHT);
+    //StackPane.setAlignment(face, Pos.TOP_RIGHT);
         
-        final Pane root = new StackPane(face);
-        root.setMinSize(135,137);
+    final Pane root = new StackPane(face);
+    root.setMinSize(135,137);
 		root.getStyleClass().add("background");
 		
 		if(Gawain.propFlag("JFX_DECORATE")==true) {
@@ -92,8 +93,13 @@ public abstract class PanBase {
 		scene.getStylesheets().add(Gawain.sheet);//load a default style...
 		scene.setFill(Color.WHITE);
 		scene.setOnKeyPressed(event->{
-			if(kb_console.match(event)==true) {
+			if(kb_console1.match(event)==true) {
 				new PanLogger(null).appear();
+			}else if(
+				kb_console2.match(event)==true &&
+				PanNisse.self.isPresent()==false
+			) {
+				new PanNisse(null).appear();
 			}else if(
 				kb_quit.match(event)==true &&
 				Gawain.mainPanel.equals(PanBase.this)==true

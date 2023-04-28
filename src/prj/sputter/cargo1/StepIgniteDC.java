@@ -39,12 +39,13 @@ public class StepIgniteDC extends StepCommon {
 		);
 		polar.getSelectionModel().select(0);
 		
-		chain(op1, run_waiting(1000,null),
-			op2_1, run_waiting(3000,null),
-			op2_2, run_waiting(3000,null),
-			op2_3, run_waiting(3000,null),
-			op3_1, run_waiting(3000,null),
-			op3_2, run_waiting(6000,null),
+		chain(
+			op1  , work_waiting(1000,msg[1]),
+			op2_1, work_waiting(3000,msg[1]),
+			op2_2, work_waiting(3000,msg[1]),
+			op2_3, work_waiting(3000,msg[1]),
+			op3_1, work_waiting(3000,msg[1]),
+			op3_2, work_waiting(6000,msg[1]),
 			run_holding, op5
 		);
 	}

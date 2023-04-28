@@ -37,7 +37,7 @@ public class StepGunsHub extends StepCommon {
 		);
 		cmb_polar.getSelectionModel().select(0);
 		
-		chain(op1,run_waiting(1000,null),op2);
+		chain(op1,work_waiting(1000,msg[1]),op2);
 	}
 	
 	final Runnable op1 = ()->{

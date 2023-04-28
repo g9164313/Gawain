@@ -58,15 +58,11 @@ public abstract class StepCommon extends Stepper {
 	protected final JFXCheckBox chk_sh2 = new JFXCheckBox("左下檔板");
 	protected final JFXCheckBox chk_sh3 = new JFXCheckBox("右下檔板");
 	
-	protected final Runnable run_holding = ()->{
-		final long rem = waiting_time(box_hold.getText());		
-		if(rem>0) {
-			msg[1].setText("倒數"+Misc.tick2text(rem, true));
-		}else {
-			msg[1].setText("");
-		}
-	};
-			
+	protected final Runnable run_holding = work_waiting(
+		Misc.text2tick(box_hold.getText()),
+		msg[1]
+	);
+		
 	protected Node gen_grid_pane(
 		final String title,
 		final String hold_time,

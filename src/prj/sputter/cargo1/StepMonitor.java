@@ -33,7 +33,7 @@ public class StepMonitor extends StepCommon {
 			box.setPrefWidth(97);
 		}
 		chain(
-			op1,run_waiting(1000,msg[1]),op2,op3,op4
+			op1,work_waiting(1000,msg[1]),op2,op3,op4
 			//op_sim
 		);
 	}

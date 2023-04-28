@@ -201,21 +201,22 @@ public abstract class StepCommon extends Stepper {
 		});
 	};
 	
-	protected final Runnable turn_on_wait = ()->{
-		final long total = dcg_t_rise+dcg_t_stable; 
-		final long remain= waiting_time(total);
-		show_mesg(
-			"等待輸出",
-			Misc.tick2text(remain,true)+"/"+Misc.tick2text(total ,true),
-			String.format("%5.1fV",dcg1.volt.get()),
-			String.format("%5.3fA",dcg1.amps.get())
-		);
-		if(remain>dcg_t_stable) {
-			return;			
+	protected final Runnable turn_on_wait = new work_period(
+		msg[3],
+		1000,
+		dcg_t_rise+dcg_t_stable
+	) {
+		@Override
+		public boolean doWork() {
+			show_mesg(
+				"等待輸出",				
+				String.format("%5.1fV",dcg1.volt.get()),
+				String.format("%5.3fA",dcg1.amps.get())
+			);
+			return true;
 		}
-		//check plasma is kindled~~~
-		hook_turn_on_wait.run();	
 	};
+	
 	protected final Runnable turn_on_wait_dummy = ()->{
 		next();
 	};

@@ -35,12 +35,12 @@ public class StepRunSPIK extends Stepper {
 	public StepRunSPIK(final DevSPIK2k device) {
 		dev = device;
 		chain(
-			op1, run_waiting(3000,null),
-			op2_1, run_waiting(3000,null), op2_2,
-			op3_1, run_waiting(3000,null), 
-			op3_2, run_waiting(3000,null),
-			op4_1, run_waiting(3000,null), op4_2,
-			run_hold, op_end
+			op1, work_waiting(3000,msg[1]),
+			op2_1, work_waiting(3000,msg[1]), op2_2,
+			op3_1, work_waiting(3000,msg[1]), 
+			op3_2, work_waiting(3000,msg[1]),
+			op4_1, work_waiting(3000,msg[1]), op4_2,
+			work_waiting(Misc.text2tick(hold.getText()),msg[1]), op_end
 		);
 	}
 	
@@ -111,16 +111,7 @@ public class StepRunSPIK extends Stepper {
 			trig(this.op4_2);
 		}		
 	};
-	
-	final Runnable run_hold = ()->{
-		msg[0].setText("HOLD~~");
-		final long rem = waiting_time(hold.getText());		
-		if(rem>0) {
-			msg[1].setText("倒數"+Misc.tick2text(rem, true));
-		}else {
-			msg[1].setText("");
-		}
-	};	
+		
 	final Runnable op_end = ()->{
 		msg[0].setText(action_name);
 		if(cont.isSelected()==false) {

@@ -17,7 +17,7 @@ public class StepKindler extends StepCommon {
 	public StepKindler(){	
 		chain(op1,
 			shutter_close,
-			spik_running, run_waiting(1000,msg[2]),
+			spik_running, work_waiting(1000,msg[2],turn_on),
 			turn_on, turn_on_wait
 		);
 	}

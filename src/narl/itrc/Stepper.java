@@ -161,11 +161,15 @@ public abstract class Stepper extends HBox {
 		}
 	}
 	protected void next_from(final Runnable base) {
-		cycle_queue(base,-1);
+		if(base!=null) {
+			cycle_queue(base,-1);
+		}
 		next();
 	}
 	protected void next_to(final Runnable base) {
-		cycle_queue(base,0);
+		if(base!=null) {
+			cycle_queue(base,0);
+		}
 		next();
 	}
 	protected void next() {
@@ -254,55 +258,112 @@ public abstract class Stepper extends HBox {
 	protected void abort() { jump(null); }
 	
 	//-----------------------------------//
-
-	private long tick = -1L;	
-	protected long waiting_time(long msec){
-		if(tick<=0L){
-			tick = System.currentTimeMillis();
-		}
-		long pass = System.currentTimeMillis() - tick;
-		if(pass>=msec){
-			reset_waiting();//reset for next turn~~~
-			//next_step();
-		}else{
-			//hold_step();
-		}
-		long rem = msec - pass;
-		return (rem>0)?(rem):(0);
-	}
-	protected void reset_waiting() {
-		tick = -1L;
-	}
-	protected long waiting_time(final String time){
-		return waiting_time(Misc.text2tick(time));
-	}
-	public Runnable run_waiting(
-		final long msec,
-		final Label mesg
-	) {
-		final Runnable obj = ()->{
-			final long rem = waiting_time(msec);
-			if(mesg!=null) {
-				mesg.setText(Misc.tick2text(rem, true));
+	
+	public Runnable work_waiting(
+		final long pass_msec,
+		final Label mesg,
+		final Runnable backfire
+	) { 
+		final Runnable work = new Runnable(){
+			@Override
+			public void run() {
+				Long mk1 = (Long)mesg.getUserData();
+				if(mk1==null) {
+					//first kick, initialize time-stamp
+					mesg.setUserData(Long.valueOf(System.currentTimeMillis()));
+					mesg.setText(Misc.tick2text(pass_msec, true));
+				}else {
+					//check period or duration~~~
+					final long diff = System.currentTimeMillis() - mk1;
+					if(diff>=pass_msec) {
+						mesg.setUserData(null);
+						mesg.setText("00:00");
+						next_to(backfire);
+						return;
+					}
+					mesg.setText(Misc.tick2text(diff, true));
+				}
+				trig(this);
 			}			
 		};
-		return obj;
+		return work;
 	}
-	public Runnable run_waiting(
-		final String time,
+	public Runnable work_waiting(
+		final long pass_msec,
 		final Label mesg
 	) {
-		return run_waiting(Misc.text2tick(time), mesg);
+		return work_waiting(pass_msec,mesg,null);
 	}
+	public void trig_waiting(
+		final long pass_msec,
+		final Label mesg,
+		final Runnable backfire
+	) {
+		trig(work_waiting(pass_msec,mesg,backfire));
+	} 
+
+	protected abstract class work_period implements Runnable {
+		int cycle_tick = 500;//unit is millisecond
+		int count_down = -1;
+		final int count_init;
+		Runnable back_call = null;
+		
+		Label info = null;
+		
+		public work_period(final int cnt) {
+			count_init = cnt;			
+		}
+		public work_period(
+			final int cycle,
+			final int pass_time
+		) {
+			count_init = cycle;
+			cycle_tick = pass_time/cycle;
+		}
+		public work_period(
+			final Label obj,
+			final int cycle,
+			final int pass_time
+		) {
+			info = obj;
+			count_init = cycle;
+			cycle_tick = pass_time/cycle;
+		}
+		
+		public abstract boolean doWork();
+		
+		@Override
+		public void run() {
+			if(count_down<0) {
+				count_down = count_init;//start to count down~~~
+			}
+			if(doWork()==false) {
+				count_down = -1;//reset counter~~~
+				next_to(back_call);
+				return;
+			}
+			count_down-=1;
+			if(info!=null) {
+				info.setText(String.format("%02d/%02d",count_down,count_init));
+			}
+			if(count_down>0) {
+				trig_millis(cycle_tick,this);
+			}else {
+				count_down = -1;//reset counter~~~
+				next_to(back_call);
+			}
+		}		
+	};
 	
-	//Misc.tick2text(rem, true)
-	//Misc.text2tick(time)
-	
-	public void wait_async() {}
-	public void notify_async() {}
+	public void wait_async() {
+		//TODO:how to replace this!!!
+	}
+	public void notify_async() {
+		//TODO:how to replace this!!!
+	}
 	//-----------------------------------//
 	
-	public String control2text(Object... lst) {
+	public static String control2text(Object... lst) {
 		String txt = "";
 		int idx = 0;
 		for(Object obj:lst) {
@@ -331,7 +392,7 @@ public abstract class Stepper extends HBox {
 		}
 		return txt;
 	}
-	protected void text2control(String txt, Object... lst) {
+	protected static void text2control(String txt, Object... lst) {
 		String[] col = txt.trim().replace("\\s", "").split(", ");
 		if(col.length==0) {
 			return;
