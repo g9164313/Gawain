@@ -58,6 +58,14 @@ public class DevModbus extends DevBase {
 		}
 		open(path);
 	}
+	public void open(final DevModbus dev,final int sid) {
+		//common wire!!!, example: Modbus RTU
+		handle= dev.handle; 
+		slave = (short)sid;
+		if(cells.size()!=0 && handle>0L) {
+			playLoop();
+		}
+	}
 	public void open(final String path) {
 		if(path.matches("^[rR][tT][uU]:[\\/\\w]+,\\d+,[78][neoNEO][12]")==true) {			
 			String[] col = path.substring(4).split(",");	

@@ -1,7 +1,10 @@
 package narl.itrc;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.jfoenix.controls.JFXCheckBox;
 import com.jfoenix.controls.JFXDecorator;
@@ -97,9 +100,9 @@ public abstract class PanBase {
 				new PanLogger(null).appear();
 			}else if(
 				kb_console2.match(event)==true &&
-				PanNisse.self.isPresent()==false
+				PanBrownie.self.isPresent()==false
 			) {
-				new PanNisse(null).appear();
+				new PanBrownie(null).appear();
 			}else if(
 				kb_quit.match(event)==true &&
 				Gawain.mainPanel.equals(PanBase.this)==true
@@ -153,7 +156,13 @@ public abstract class PanBase {
 	 * @return
 	 */
 	public abstract Node eventLayout(PanBase self);
-
+	
+	public Object[] getOpenAPI(){
+		final String txt = new BufferedReader(new InputStreamReader(
+			Gawain.class.getResourceAsStream("/narl/itrc/res/openapi.json")
+		)).lines().collect(Collectors.joining("\n"));
+		return new Object[]{txt,null};
+	}
 	//----------------------------------------------//
 		
 	public static class Spinner extends JFXDialog {		
@@ -223,20 +232,6 @@ public abstract class PanBase {
 		dialog.show((StackPane)root());
 	}
 
-	/*public void notifyAsyncDev(
-		final Control ctrl,
-		final DevBase... dev
-	) {		
-		ctrl.setDisable(true);
-		final Timeline monitor = new Timeline();
-		monitor.setCycleCount(Animation.INDEFINITE);
-		monitor.setOnFinished(e->ctrl.setDisable(false));
-		monitor.getKeyFrames().add(new KeyFrame(
-			Duration.millis(100),event->{
-		}));		
-		monitor.stop();
-	}*/
-		
 	/**
 	 * show a spinner, let user know we are working.<p>
 	 * @param task - a working thread.<p>

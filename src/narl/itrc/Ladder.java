@@ -257,6 +257,16 @@ public class Ladder extends BorderPane {
 	 */
 	private final IntegerProperty sta = new SimpleIntegerProperty(0);
 	
+	public String getStatusText(){
+		String txt = "unknow";
+		switch(sta.get()){
+		case 0: txt="idle"; break;
+		case 1: txt="run"; break;
+		case 2: txt="pause"; break;
+		}
+		return txt;
+	}
+
 	public void start(){
 		if(sta.get()==2) {
 			//go into run-state again from pause-state

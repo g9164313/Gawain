@@ -1,0 +1,80 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "$INFO_TITLE",
+    "description": "$INFO_DESC",
+    "termsOfService": "$INFO_TERMS_URL",
+    "contact": {
+      "name": "Gawain Support",
+      "url": "https://www.tiri.narl.org.tw/",
+      "email": "g9164313@gmail.com"
+    }
+  },
+  
+  "host": "$HOST_NAME",  
+  "schemes": ["http"],
+
+  "paths": {
+    "/api/status": {
+      "get":{
+        "description":"get list of machine status",
+        "produces":["application/json","text/plain"],
+        "responses": {
+          "200"    : { "description": "property status" },
+          "default": { "description": "no information for status" }
+        }
+      }
+    },
+    "/api/touch":{
+      "post":{
+        "description":"touch or toogle machine button",
+        "produces":["application/json","text/plain"],
+        "responses": {
+          "200"    : { "description": "work for machine" },
+          "default": { "description": "no work for machine" }
+        }
+      }
+    },
+    "/api/hold-on":{
+      "post":{
+        "description":"touch or toogle machine button",
+        "produces":["application/json","text/plain"],
+        "responses": {
+          "200"    : { "description": "work for Hold-On" },
+          "default": { "description": "fial to Hold-On" }
+        }
+      }
+    },
+    "/api/ladder/run":{
+      "post":{
+        "description":"touch or toogle machine button",
+        "produces":["application/json","text/plain"],
+        "responses": {
+          "200"    : { "description": "work for ladder run" },
+          "default": { "description": "fail to stop ladder" }
+        }
+      }
+    },
+    "/api/ladder/pause":{
+      "post":{
+        "description":"touch or toogle machine button",
+        "produces":["application/json","text/plain"],
+        "responses": {
+          "200"    : { "description": "work for ladder pause" },
+          "default": { "description": "fail to pause ladder" }
+        }
+      }
+    },
+    "/api/ladder/stop":{
+      "post":{
+        "description":"stop laddern",
+        "produces":["application/json","text/plain"],
+        "responses": {
+          "200"    : { "description": "work for ladder stop" },
+          "default": { "description": "fail to stop ladder" }
+        }
+      }
+    }
+  }
+}

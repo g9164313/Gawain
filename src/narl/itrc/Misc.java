@@ -820,7 +820,8 @@ public class Misc {
 		}
 		return obj;
 	}
-
+	//-------------------------------------
+	
 	@SuppressWarnings("unchecked")
 	public static class BiMap<K,V> extends HashMap<K,V> {
 		private static final long serialVersionUID = 2076368437439402996L;

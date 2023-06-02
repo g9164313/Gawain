@@ -71,9 +71,9 @@ public class PanLogger extends PanBase {
 		HBox.setHgrow(box, Priority.ALWAYS);
 		
 		final HBox lay1 = new HBox(new Label(">>"),box);
-		lay1.setAlignment(Pos.BASELINE_LEFT);		
 		lay1.getStyleClass().addAll("box-pad");
-			
+		lay1.setAlignment(Pos.BASELINE_LEFT);		
+					
 		final BorderPane lay0 = new BorderPane();
 		lay0.setCenter(tbl);
 		lay0.setBottom(lay1);
