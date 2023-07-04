@@ -132,21 +132,21 @@ public class StepMonitor extends StepCommon {
 		apply_DC1= false;
 		apply_pow= spik.DC1_P_Set.get() / 2f;
 		refresh_box();
-		wait_async();		
-		sqm1.shutter_and_zeros(true, ()->{
-			tick_beg = System.currentTimeMillis();
-			msg[1].setText("開啟檔板");
-			adam1.asyncSetAllLevel(
-				true, 
-				chk_sh2.isSelected(),
-				chk_sh3.isSelected()
-			);
-			notify_async();
-			PanMain.event_toggle_rotator.handle(null);
-		}, ()->{
-			msg[1].setText("SQM錯誤");
-			abort();
-		});	
+		wait_breakin_hook(sqm1,()->{
+			sqm1.shutter_and_zeros(true, ()->{
+				tick_beg = System.currentTimeMillis();
+				msg[1].setText("開啟檔板");
+				adam1.asyncSetAllLevel(
+					true, 
+					chk_sh2.isSelected(),
+					chk_sh3.isSelected()
+				);
+				PanMain.event_toggle_rotator.handle(null);
+			}, ()->{
+				msg[1].setText("SQM錯誤");
+				abort();
+			});
+		});
 	};
 	final Runnable op2 = ()->{		
 

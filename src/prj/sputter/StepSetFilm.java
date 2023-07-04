@@ -99,7 +99,7 @@ public class StepSetFilm extends Stepper {
 	
 	final Runnable op1 = ()->{
 		msg[1].setText("apply!!");
-		wait_async();
+		
 		final char id = (chk_fild_id.isSelected())?(
 			(char)(48+cmb_film_id.getSelectionModel().getSelectedItem())
 		):(
@@ -115,8 +115,7 @@ public class StepSetFilm extends Stepper {
 			null,//Set-point Time (0 to 5999 second)
 			""+Misc.txt2bit_val(box_sensors.getText(),-1),//sensor bits (integer)
 		};
-		
-		sqm1.asyncBreakIn(()->{
+		wait_breakin(sqm1,()->{
 			String txt = sqm1.exec(String.format("A%c?", id));
 			if(txt.charAt(0)=='A'){
 				//modify arguments, name is special, replace space character
@@ -142,7 +141,6 @@ public class StepSetFilm extends Stepper {
 			}else{
 				Application.invokeLater(()->msg[1].setText("無法讀取"));
 			}
-			notify_async();
 		});
 	};
 	

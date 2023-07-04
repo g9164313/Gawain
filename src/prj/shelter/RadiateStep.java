@@ -144,22 +144,22 @@ public abstract class RadiateStep extends Stepper {
 	
 	protected final Runnable op_move_pallet = ()->{
 		hustio.asyncMoveTo(box_loca.getText());
-		final long rem = waiting_time(1500);
+		/*final long rem = waiting_time(1500);
 		if(rem>0) {
 			hold_step();
 		}else {
 			next_step();
-		}
+		}*/
 	};
 	protected final Runnable op_wait_pallet = ()->{		
 		if(hustio.isMoving()==true) {
 			show_info("移動中","busy!!");
-			hold_step();
+			//hold_step();
 		}else {
 			final String txt = hustio.locationText.get();
 			show_info("定位",txt);
 			Misc.logv("[HOSTIO] hold in %s", txt);
-			next_step();
+			//next_step();
 		}
 	};
 	
@@ -178,10 +178,10 @@ public abstract class RadiateStep extends Stepper {
 			tick = prelogue_tick + tick + epilogue_tick;
 		}		
 		hustio.asyncRadiation(stng,tick);
-		next_step();
+		//next_step();
 	};
 	protected final Runnable op_prewarm = ()->{
-		if(chk_meas.isSelected()==true) {
+		/*if(chk_meas.isSelected()==true) {
 			final long rem = waiting_time(prelogue_tick);
 			show_info(
 				"預熱中",
@@ -194,7 +194,7 @@ public abstract class RadiateStep extends Stepper {
 			}
 		}else {
 			next_step();
-		}
+		}*/
 	};
 	protected final Runnable op_wait_radiation = ()->{
 		if(hustio.isRadiant()==true) {
@@ -204,14 +204,14 @@ public abstract class RadiateStep extends Stepper {
 				Misc.tick2text(hustio.getLeftCount(), false, 3),
 				box_left.getText()
 			);
-			hold_step();
+			//hold_step();
 		}else {
-			next_step();
+			//next_step();
 		}
 	};
 	
 	protected final Runnable op_make_measure = ()->{
-		next_step();
+		//next_step();
 		if(chk_meas.isSelected()==false) {
 			return;
 		}
@@ -238,7 +238,7 @@ public abstract class RadiateStep extends Stepper {
 		);
 	};
 	protected final Runnable op_wait_measure = ()->{
-		next_step();		
+		//next_step();		
 		if(chk_meas.isSelected()==true) { 
 			if(hustio.isRadiant()==true) {
 				show_info(
@@ -248,7 +248,7 @@ public abstract class RadiateStep extends Stepper {
 				);
 			}
 			if(at5350.isIdle.get()==false) {	
-				hold_step();
+				//hold_step();
 			}else {
 				Object[] res = at5350.lastResult();				
 				txt_desc.setUserData(res);
@@ -281,7 +281,7 @@ public abstract class RadiateStep extends Stepper {
 		
 	public static class Reset extends RadiateStep {
 		public Reset() {
-			set(op_1,op_2);
+			chain(op_1,op_2);
 		}
 
 		final JFXCheckBox chk1 = new JFXCheckBox("HustIO原點");
@@ -294,7 +294,7 @@ public abstract class RadiateStep extends Stepper {
 		}
 		
 		final Runnable op_1 = ()->{
-			next_step();
+			//next_step();
 			String[] txt = {"",""};
 			if(chk1.isSelected()==true) {
 				hustio.asyncMoveTo("");
@@ -307,14 +307,14 @@ public abstract class RadiateStep extends Stepper {
 			show_info(txt);			
 		};
 		final Runnable op_2 = ()->{
-			next_step();
+			//next_step();
 			String[] txt = {"",""};
 			if(chk1.isSelected() && hustio.isMoving()) {
-				hold_step();
+				//hold_step();
 				txt[0] = "回歸中";
 			}
 			if(chk2.isSelected() && at5350.isIdle.get()==false) {
-				hold_step();
+				//hold_step();
 				txt[1] = "補償中";
 			}
 			show_info(txt);

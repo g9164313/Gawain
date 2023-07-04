@@ -114,14 +114,12 @@ public class StepFlowCtrl extends StepCommon {
 		for(SetValue sv:sval) {
 			sv.init();
 		}
-		wait_async();
-		coup.asyncBreakIn(()->{
+		wait_breakin(coup,()->{
 			coup.set_all_mass_flow(
 				sval[0].goal, 
 				sval[1].goal, 
 				sval[2].goal
 			);
-			notify_async();
 		});
 	};
 		

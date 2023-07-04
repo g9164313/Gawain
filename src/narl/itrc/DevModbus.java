@@ -2,17 +2,18 @@ package narl.itrc;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Semaphore;
 
 import com.sun.glass.ui.Application;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.FloatProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 
 /**
  * Support Modbus device, provide a looper to update or modify registers.<p>
@@ -56,7 +57,10 @@ public class DevModbus extends DevBase {
 			Misc.logw("No default tty name...");
 			return;
 		}
-		open(path);
+		open(path,0);
+	}
+	public void open(final String path) {
+		open(path,0);
 	}
 	public void open(final DevModbus dev,final int sid) {
 		//common wire!!!, example: Modbus RTU
@@ -66,7 +70,7 @@ public class DevModbus extends DevBase {
 			playLoop();
 		}
 	}
-	public void open(final String path) {
+	public void open(final String path, final int sid) {
 		if(path.matches("^[rR][tT][uU]:[\\/\\w]+,\\d+,[78][neoNEO][12]")==true) {			
 			String[] col = path.substring(4).split(",");	
 			if(col.length>=1) {
@@ -97,17 +101,64 @@ public class DevModbus extends DevBase {
 		}else {
 			handle = 0L;
 		}
+		slave = (short)sid;
 		if(cells.size()!=0 && handle>0L) {
 			playLoop();
 		}
 	}
 
+
+	private static final Semaphore sema = new Semaphore(1);
+
+	/**
+	 * 	User can override this to prepare something.<p>
+	 * 	Remember this is not called by GUI-thread.<p>
+	 */
+	protected void ignite_task(){}
+
+		/**
+	 * 	User can override this to launch change-event.<p>
+	 * 	This hook is called by GUI-thread.<p>
+	 */
+	protected void looper_event(){}
+	
+	private ArrayList<RecallCell> cells = new ArrayList<>();
+	
 	public void playLoop() {
 		if(isFlowing()==true) {
 			return;
 		}
-		addState(STG_IGNITE,()->ignite());
-		addState(STG_LOOPER,()->looper());
+		addState(STG_IGNITE,()->{
+			nextState(STG_LOOPER);
+			ignite_task();		
+		});
+		addState(STG_LOOPER,()->{
+			nextState(STG_LOOPER);
+			if(cells.size()==0) {
+				block_sleep_msec(500);
+				return;
+			}
+			try {
+				sema.acquire();
+				//System.out.printf("[%s] acquire\n", TAG);
+				implSlaveID(slave);
+				for(RecallCell cc:cells) {
+					cc.fecth_data();
+				}
+				//System.out.printf("[%s] relase\n", TAG);
+				sema.release();
+			} catch (InterruptedException e) {			
+				System.out.printf("[%s][STG_LOOPER] %s\n", TAG, e.getMessage());
+				return;
+			}		
+			Application.invokeLater(()->{
+				for(RecallCell cc:cells) {
+					cc.update_property();
+				}
+				looper_event();
+			});
+			block_sleep_msec(50);
+		});
 		playFlow(STG_IGNITE);
 	}
 
@@ -125,6 +176,13 @@ public class DevModbus extends DevBase {
 	
 	private class MirrorCell {
 		final int    offset;
+		/**
+		 * property type present~:
+		 * S:16-bit, 
+		 * I:32-bit,HL
+		 * J:32-bit,LH 
+		 * F:ieee3248, float,
+		 */
 		final char   t_type;
 		final Object target;
 		MirrorCell(
@@ -137,54 +195,42 @@ public class DevModbus extends DevBase {
 			target = obj;
 		}
 		void update_number(final short[] blkdata) {
-			switch(t_type) {			
-			case 'B':
-			case 'b': 
-				update_boolean(blkdata); 
-				break;
-			case 'I':
-			case 'i': 
-				update_integer(blkdata);
-				break;
+			switch(t_type) {
 			case 'S': 
 				update_short(blkdata);
+				break;		
+			case 'I':
+				update_integer(blkdata,true);
+				break;
+			case 'J':
+				update_integer(blkdata,false);
 				break;
 			case 'F':
 				update_float(blkdata); 
 				break;
 			}
 		}
-		private void update_boolean(final short[] blkdata) {
-			int o1 = offset >>4;
-			int m1 = offset &0xF;//mask
-			int v1 = blkdata[o1];
-			if(o1>=blkdata.length) {
-				return;
-			}
-			v1 = v1 & (1<<m1);
-			if(t_type=='B') {
-				((BooleanProperty)target).set(v1!=0);
-			}else if(t_type=='b'){
-				((AtomicBoolean)target).set(v1!=0);
-			}			
-		}
-		private void update_integer(final short[] blkdata) {
-			if(offset>=blkdata.length) {
-				return;
-			}
-			int v = blkdata[offset];
-			if(t_type=='I') {
-				((IntegerProperty)target).set(v);
-			}else if(t_type=='i'){
-				((AtomicInteger)target).set(v);
-			}			
-		}
 		private void update_short(final short[] blkdata) {
 			if(offset>=blkdata.length) {
 				return;
 			}
-			int v2 = blkdata[offset];				
-			((IntegerProperty)target).set(v2&0x0000FFFF);		
+			int vv = (((int)blkdata[offset])&0x0000FFFF);				
+			((IntegerProperty)target).set(vv);		
+		}
+		private void update_integer(final short[] blkdata,final boolean HtoL) {
+			if((offset+1)>=blkdata.length) {
+				return;
+			}
+			int vv = 0, aa=1, bb=0;
+			if(HtoL){
+				aa=0; bb=1;		
+			}else{
+				aa=1; bb=0;	
+			}
+			vv = (int)blkdata[offset+aa];
+			vv = vv << 16;
+			vv = vv | (((int)blkdata[offset+bb])&0x0000FFFF);	
+			((IntegerProperty)target).set(vv);	
 		}
 		private void update_float(final short[] blkdata) {
 			if((offset+1)>=blkdata.length) {
@@ -200,30 +246,25 @@ public class DevModbus extends DevBase {
 			((FloatProperty)target).set(v);
 				
 		}
-	}	
+	}
+	//--------------------------------------------------------
+
 	private class RecallCell {
-		final int  slaveId;//MODBUS_BROADCAST_ADDRESS=0, default=-1
 		final char func_id;		
 		final int  address;
 		final short[] blkdata;  
-	
-		ArrayList<MirrorCell> prop = new ArrayList<>();
-		
+		final ArrayList<MirrorCell> prop = new ArrayList<>();
+
 		RecallCell(
-			final int sid,
 			final char fid,
 			final int addr,
 			final int size
-		) {			
-			slaveId = sid;
+		) {
 			func_id = fid;
 			address = addr;			
 			blkdata = new short[size];
 		}
 		void fecth_data() {
-			if(slaveId>=0) {
-				implSlaveID(slaveId);
-			}
 			switch(func_id) {
 			case 'C':
 				//coils, function code = 1
@@ -250,37 +291,7 @@ public class DevModbus extends DevBase {
 			}
 		}
 	};
-	
-	private ArrayList<RecallCell> cells = new ArrayList<>();
-	
-	/**
-	 * 	User can override this to prepare something.<p>
-	 * 	Remember this is not called by GUI-thread.<p>
-	 */
-	protected void ignite() {
-		nextState(STG_LOOPER);
-	}
-	
-	protected int looperDelay = 50;
-	
-	protected void looper() {
-		if(cells.size()==0) {
-			block_sleep_msec(500);
-			return;
-		}
-		for(RecallCell cc:cells) {
-			cc.fecth_data();
-			if(looperDelay>0) {
-				block_sleep_msec(looperDelay);
-			}
-		}
-		Application.invokeLater(()->{
-			for(RecallCell cc:cells) {
-				cc.update_property();
-			}
-		});
-	}
-	
+
 	/**
 	 * mapping register address.<p>
 	 * first character is register type, it can be C, S, I, H<p>
@@ -294,7 +305,6 @@ public class DevModbus extends DevBase {
 	 */
 	public DevModbus mapAddress(
 		final int radix,
-		final int sid,
 		final String... address
 	) {
 		String pattn;
@@ -323,7 +333,7 @@ public class DevModbus extends DevBase {
 					return this;
 				}
 			}
-			cells.add(new RecallCell(sid,fid,addr,size));
+			cells.add(new RecallCell(fid,addr,size));
 		}
 		return this;
 	}
@@ -339,242 +349,226 @@ public class DevModbus extends DevBase {
 	 * @return
 	 */
 	public DevModbus mapAddress(final String... address) {
-		return mapAddress(10, -1,address);
-	}
-	public DevModbus mapAddress(final int sid,final String... address) {
-		return mapAddress(10,sid,address);
+		return mapAddress(10,address);
 	}
 	public DevModbus mapAddress10(final String... address) {
-		return mapAddress(address);
+		return mapAddress(10,address);
 	}
-	public DevModbus mapAddress10(final int sid,final String... address) {
-		return mapAddress(sid,address);
-	}
-	/**
-	 * convenience function for 'mapAddress(radix,address)'.<p>
-	 * address base is decimal.<p>
-	 * mapping register address.<p>
-	 * first character is register type, it can be C, H, I.<p>
-	 * C - coil register
-	 * H - holding register
-	 * I/R - input register
-	 * @param address
-	 * @return
-	 */
 	public DevModbus mapAddress16(final String... address) {
-		return mapAddress(16, -1,address);
-	}
-	public DevModbus mapAddress16(final int sid,final String... address) {
-		return mapAddress(16,sid,address);
+		return mapAddress(16,address);
 	}
 	
-	public BooleanProperty mapBoolean(final int address,final int bit) {
-		return mapBoolean(-1,address,bit);
-	}
 	public IntegerProperty mapShort(final int address) {
-		return mapShort(01,address);
+		IntegerProperty prop = new SimpleIntegerProperty();
+		add_mirror_cell(address,'S',prop);
+		return prop;
 	}
 	public IntegerProperty mapInteger(final int address) {
-		return mapInteger(-1,address);
+		return mapIntegerHL(address);
+	}
+	public IntegerProperty mapIntegerHL(final int address) {
+		IntegerProperty prop = new SimpleIntegerProperty();
+		add_mirror_cell(address,'I',prop);
+		return prop;
+	}
+	public IntegerProperty mapIntegerLH(final int address) {
+		IntegerProperty prop = new SimpleIntegerProperty();
+		add_mirror_cell(address,'J',prop);
+		return prop;
 	}
 	public FloatProperty mapFloat(final int address) {		
-		return mapFloat(-1,address);
-	}
-	public BooleanProperty mapBoolean(final int slaveId,final int address,final int bit) {
-		BooleanProperty prop = new SimpleBooleanProperty();
-		add_mirror_cell(slaveId,address,bit,'B',prop);
-		return prop;
-	}
-	public IntegerProperty mapShort(final int slaveId,final int address) {
-		IntegerProperty prop = new SimpleIntegerProperty();
-		add_mirror_cell(slaveId,address,-1,'S',prop);
-		return prop;
-	}
-	public IntegerProperty mapInteger(final int slaveId,final int address) {
-		IntegerProperty prop = new SimpleIntegerProperty();
-		add_mirror_cell(slaveId,address,-1,'I',prop);
-		return prop;
-	}
-	public FloatProperty mapFloat(final int slaveId,final int address) {
 		FloatProperty prop = new SimpleFloatProperty();
-		add_mirror_cell(slaveId,address,-1,'F',prop);		
+		add_mirror_cell(address,'F',prop);
 		return prop;
 	}
+
 	/**
 	 * 
 	 * @param address
-	 * @param bit_pos: 0 to 15
 	 * @param prop_type
 	 * @param property
 	 */
 	private void add_mirror_cell(
-		final int slaveId,
 		final int address,
-		final int bit_pos,
 		final char prop_type,
 		final Object property
 	) {
 		for(RecallCell cc:cells) {
-			if(cc.slaveId!=slaveId) {
-				continue;
-			}
 			final int beg = cc.address;
 			final int end = cc.address + cc.blkdata.length;
 			if(beg<=address && address<end) {
-				int off = address - cc.address;
-				if(0<=bit_pos && bit_pos<=15) {
-					off = (off << 4) | (bit_pos & 0xF); 
-				}
 				cc.prop.add(new MirrorCell(
-					off,
-					prop_type,
-					property
+					address - cc.address,
+					prop_type,property
 				));
 				return;
 			}
 		}
 	}
+	//-------------------------------------//
+
+	private int pan_addr=0, pan_size=8;
+	private short[] pan_buff = null;
+
+	private class PanRanger extends PanDialog<Integer>{
+		final TextField box_addr, box_size;
+		PanRanger(){
+			box_addr = new TextField(String.format("x%05X", pan_addr));
+			box_addr.setPrefWidth(80.);
+			box_size = new TextField(String.format("%d", pan_size));
+			box_size.setPrefWidth(80.);
+
+			final GridPane lay = new GridPane();
+			lay.getStyleClass().addAll("box-pad");
+			lay.addRow(0, new Label("位址："), box_addr);
+			lay.addRow(0, new Label("大小："), box_size);
+			init(lay);
+		}
+		@Override
+		protected boolean set_result_and_close(ButtonType type) {
+			if(type.equals(ButtonType.OK)) {
+				try{
+					String txt_addr = box_addr.getText().trim();
+					if(txt_addr.startsWith("0x")){
+						txt_addr = txt_addr.substring(2);
+						pan_addr = Integer.valueOf(txt_addr,16);
+					}else if(txt_addr.charAt(0)=='x'){
+						txt_addr = txt_addr.substring(1);
+						pan_addr = Integer.valueOf(txt_addr,16);
+					}else{
+						pan_addr = Integer.valueOf(txt_addr);
+					}				
+					pan_size = Integer.valueOf(box_size.getText());
+					setResult(1);
+				}catch(NumberFormatException e){
+					setResult(0);
+				}
+			}else if(type.equals(ButtonType.CANCEL)){
+				setResult(0);
+			}
+			return true;
+		}
+	};
+	private class PanEditor extends PanDialog<Integer>{
+		TextField[] box_vals = null;
+		PanEditor(){
+			box_vals = new TextField[pan_buff.length];
+			for(int i=0; i<pan_buff.length; i++){
+				box_vals[i] = new TextField(String.format("%d", (int)pan_buff[i]));
+				box_vals[i].setPrefWidth(80.);
+			}
+			final GridPane lay = new GridPane();
+			lay.getStyleClass().addAll("box-pad");
+			lay.addRow(0, new Label("位址"), new Label("數值（10進制）"));
+			for(int i=0; i<pan_buff.length; i++){
+				lay.addRow(i+1, new Label(String.format("0x%05X",pan_addr+i)), box_vals[i]);
+			}
+			init(lay);
+		}
+		@Override
+		protected boolean set_result_and_close(ButtonType type) {
+			if(type.equals(ButtonType.OK)) {				
+				for(int i=0; i<pan_buff.length; i++){
+					try{
+						pan_buff[i] = Short.valueOf(box_vals[i].getText());
+					}catch(NumberFormatException e){
+					}
+				}
+				setResult(1);
+			}else if(type.equals(ButtonType.CANCEL)){
+				setResult(0);
+			}
+			return true;
+		}
+	};
 	
+	protected void pop_editor(){
+		final PanRanger rng = new PanRanger();
+		if(rng.showAndWait().get()==0){
+			return;
+		}		
+		asyncBreakIn(()->{
+			//fetch register data from device
+			pan_buff = readRegVal('I', pan_addr, pan_size);
+		}, ()->{
+			final PanEditor edt = new PanEditor();
+			if(edt.showAndWait().get()==0){
+				return;
+			}
+			asyncBreakIn(()->{
+				//write data back to device register
+				writeRegVal(pan_addr, pan_buff);
+				pan_buff = null;
+			});
+		});
+	}
 	//-------------------------------------//
 	
-	/**
-	 * continue writing until it is successful.
-	 * @param s_id - slave identify
-	 * @param addr - address
-	 * @param val - value
-	 */
-	public void writeCont_sid(final int s_id,final int addr,final int val) {
-		implSlaveID(s_id);
-		short[] buff = { (short)(val&0xFFFF) };
-		int res = 0;
-		do{
-			res = implWrite(addr,buff);
-			if(res>0) {
+	public short[] readRegVal(final char fid,final int addr,final int size) {		
+		short[] val = new short[size];
+		char _fid = Character.toUpperCase(fid);
+		try {
+			sema.acquire();
+			implSlaveID(slave);		
+			switch(_fid) {
+			case 'C'://coils, function code = 1
+				implReadC(addr,val);
+				break;
+			case 'S'://input status, function code = 2
+				implReadS(addr,val);
+				break;
+			case 'H'://holding register, function code = 3
+				implReadH(addr,val);
+				break;				
+			case 'I'://input register, function code = 4
+				implReadI(addr,val);
 				break;
 			}
-			block_sleep_msec(50);
-		}while(true);
-	}
-	public void writeVals_sid(final int s_id,final int addr,final int... vals) {
-		implSlaveID(s_id);
-		final short[] buff = new short[vals.length];
-		for(int i=0; i<vals.length; i++) {
-			buff[i] = (short)(vals[i]&0xFFFF);
+			sema.release();
+		} catch (InterruptedException e) {
+			System.err.printf("[%s][readRegVal] %s\n", TAG, e.getMessage());
 		}
-		implWrite(addr,buff);
+		return val;
 	}
-	public void write_OR_sid(final int s_id,final int addr,final int val) {
-		implSlaveID(s_id);
-		short[] buff = {0};
-		implReadI(addr,buff);
-		buff[0] = (short)((buff[0] | val) & 0xFFFF);
-		implWrite(addr,buff);
+	public int readRegVal(final char fid,final int addr){
+		short[] val = readRegVal(fid,addr,1);
+		return ((int)val[0])&0x0000FFFF;
 	}
-	public void writeAND_sid(final int s_id,final int addr,final int val) {
-		implSlaveID(s_id);
-		short[] buff = {0};
-		implReadI(addr,buff);
-		buff[0] = (short)((buff[0] & val) & 0xFFFF);
-		implWrite(addr,buff);
-	}
-	public void writeXOR_sid(final int s_id,final int addr,final int val) {
-		implSlaveID(s_id);
-		short[] buff = {0};
-		implReadI(addr,buff);
-		buff[0] = (short)((buff[0] ^ val) & 0xFFFF);
-		implWrite(addr,buff);
-	}
-	public void writeCls_sid(final int s_id,final int addr,final int bit) {
-		implSlaveID(s_id);
-		short[] buff = {0};
-		implReadI(addr,buff);
-		buff[0] = (short)((buff[0] & ~(1<<bit)) & 0xFFFF);
-		implWrite(addr,buff);
-	}
-	public void writeSet_sid(final int s_id,final int addr,final int bit) {
-		implSlaveID(s_id);
-		short[] buff = {0};
-		implReadI(addr,buff);
-		buff[0] = (short)((buff[0] |  (1<<bit)) & 0xFFFF);
-		implWrite(addr,buff);
-	}
-	
-	public void writeCont(final int addr,final int val) {
-		writeCont_sid(-1,addr,val);
-	}
-	public void writeVals(final int addr,final int... vals) {
-		writeVals_sid(-1,addr,vals);
-	}
-	public void write_OR(final int addr,final int val) {
-		write_OR_sid(-1,addr,val);
-	}
-	public void writeAND(final int addr,final int val) {
-		writeAND_sid(-1,addr,val);
-	}
-	public void writeXOR(final int addr,final int val) {
-		writeXOR_sid(-1,addr,val);
-	}
-	public void writeCls(final int addr,final int bit) {
-		writeCls_sid(-1,addr,bit);
-	}
-	public void writeSet(final int addr,final int bit) {
-		writeSet_sid(-1,addr,bit);
-	}
-	
-	public void asyncWriteCont_sid(final int s_id,final int addr,final int val) { asyncBreakIn(()->writeCont_sid(s_id,addr,val));}	
-	public void asyncWriteVals_sid(final int s_id,final int addr,final int... val) { asyncBreakIn(()->writeVals_sid(s_id,addr,val));}	
-	public void asyncWrite_OR_sid (final int s_id,final int addr,final int val) { asyncBreakIn(()->write_OR_sid (s_id,addr,val));}
-	public void asyncWriteAND_sid (final int s_id,final int addr,final int val) { asyncBreakIn(()->writeAND_sid (s_id,addr,val));}
-	public void asyncWriteXOR_sid (final int s_id,final int addr,final int val) { asyncBreakIn(()->writeXOR_sid (s_id,addr,val));}
-	public void asyncWriteCls_sid (final int s_id,final int addr,final int bit) { asyncBreakIn(()->writeCls_sid (s_id,addr,bit));}
-	public void asyncWriteSet_sid (final int s_id,final int addr,final int bit) { asyncBreakIn(()->writeSet_sid (s_id,addr,bit));}
-	
-	public void asyncWriteCont(final int addr,final int val) { asyncWriteCont_sid(-1,addr,val); }
-	public void asyncWriteVals(final int addr,final int... val) { asyncWriteVals_sid(-1,addr,val); }	
-	public void asyncWrite_OR (final int addr,final int val) { asyncWrite_OR_sid (-1,addr,val); }
-	public void asyncWriteAND (final int addr,final int val) { asyncWriteAND_sid (-1,addr,val); }
-	public void asyncWriteXOR (final int addr,final int val) { asyncWriteXOR_sid (-1,addr,val); }
-	public void asyncWriteCls (final int addr,final int bit) { asyncWriteCls_sid (-1,addr,bit); }
-	public void asyncWriteSet (final int addr,final int bit) { asyncWriteSet_sid (-1,addr,bit); }
-	
-	
-	public int readReg(
-		final int sid,			
-		final char fid,
-		final int addr
-	) {
-		if(sid>=0) {
-			implSlaveID(sid);
+
+	public void writeRegVal(final int addr, final short... value){
+		try {
+			sema.acquire();
+			implSlaveID(slave);
+			implWrite(addr,value);
+			sema.release();
+		} catch (InterruptedException e) {
+			System.err.printf("[%s][writeRegVal] %s\n", TAG, e.getMessage());
 		}
-		short[] val = {0};
-		char _fid = Character.toUpperCase(fid);		
-		switch(_fid) {
-		case 'C':
-			//coils, function code = 1
-			implReadC(addr,val);
-			break;
-		case 'S':
-			//input status, function code = 2
-			implReadS(addr,val);
-			break;
-		case 'H':
-			//holding register, function code = 3
-			implReadH(addr,val);
-			break;				
-		case 'I':
-			//input register, function code = 4
-			implReadI(addr,val);
-			break;
+	}
+
+	public void writeRegVal(final int addr, final int... value){
+		short[] val = new short[value.length];
+		for(int i=0; i<value.length; i++){
+			val[i] = (short)(value[i]&0xFFFF);
 		}
-		return (int)val[0];
+		writeRegVal(addr,val);
 	}
-	public int readReg(
-		final char fid,
-		final int addr
-	) {
-		return readReg(-1,fid,addr);
+	public void writeRegPair(final int... pair){
+		try {
+			sema.acquire();
+			implSlaveID(slave);
+			for(int i=0; i<pair.length; i+=2){
+				int addr = pair[i+0];
+				short[] val = {(short)(pair[i+1]&0xFFFF)};				
+				implWrite(addr,val);
+			}			
+			sema.release();
+		} catch (InterruptedException e) {
+			System.err.printf("[%s][writeRegVal] %s\n", TAG, e.getMessage());
+		}
 	}
-	
+	//-------------------------------------//
+
 	protected native void implOpenRtu();	
 	protected native void implOpenTcp();
 	protected native void implSlaveID(int slave_id);

@@ -66,11 +66,8 @@ public class StepGunsHub extends StepCommon {
 		//JFXRadioButton rad2 = (JFXRadioButton)lay.lookup("#unipolar");
 		final JFXCheckBox chk1 = (JFXCheckBox)lay.lookup("#gun-1");
 		//JFXCheckBox chk2 = (JFXCheckBox)lay.lookup("#gun-2");
-		
-		wait_async();
-		coup.asyncBreakIn(()->{
+		wait_breakin(coup,()->{
 			coup.select_gun_hub(rad1.isSelected(),chk1.isSelected());
-			notify_async();
 		});
 	};
 	

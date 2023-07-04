@@ -43,10 +43,9 @@ public class StepSetPulse extends StepCommon {
 		try{
 			final int value= Integer.valueOf(txt.trim());
 			show_mesg("設定 "+name);
-			wait_async();
-			spik.asyncSetRegister(pay->{				
-				notify_async();
-			}, addr, value);
+			wait_breakin_hook(spik,()->{
+				spik.asyncSetRegister(pay->{}, addr, value);
+			});
 		}catch(NumberFormatException e){
 			show_mesg("忽略 "+name);
 			next();

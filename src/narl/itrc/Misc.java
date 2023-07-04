@@ -68,17 +68,18 @@ public class Misc {
 		final int ee = txt.indexOf(']');
 		final String tag = txt.substring(0, ee+1);
 		final String msg = txt.substring(ee+1);
-		if(LoggerSta!=null) {
-			try {
-				LoggerSta.execute(String.format(
-					"INSERT INTO logger(tag,msg) VALUES('%s','%s')",
-					tag,msg
-				));
-			} catch (SQLException e) {
-				System.out.println(e.getMessage());
-			}
+		System.out.println(txt);
+		if(LoggerSta==null) {
+			return;
 		}
-		System.out.print(txt);
+		try {
+			LoggerSta.execute(String.format(
+				"INSERT INTO logger(tag,msg) VALUES('%s','%s')",
+				tag,msg
+			));
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
 	}
 	
 	public static String get_trace() {
@@ -102,23 +103,6 @@ public class Misc {
 	}
 	
 	//----------------------------------------//
-
-	/*public static final KeyCombination shortcut_save = KeyCombination.keyCombination("Ctrl+S");
-	public static final KeyCombination shortcut_load = KeyCombination.keyCombination("Ctrl+L");
-	public static final KeyCombination shortcut_edit = KeyCombination.keyCombination("Ctrl+E");
-	
-	public static void selectTxt(ComboBox<String> box,String txt){
-		ObservableList<String> lst = box.getItems();
-		int cnt = lst.size();
-		for(int i=0; i<cnt; i++){
-			if(lst.get(i).equalsIgnoreCase(txt)==true){
-				box.getSelectionModel().select(i);
-				return;
-			}
-		}
-		box.getItems().add(txt);
-		box.getSelectionModel().select(cnt);
-	}*/
 
 	private static final SimpleDateFormat date_name = new SimpleDateFormat("yyyyMMdd-HHmm");
 	/**

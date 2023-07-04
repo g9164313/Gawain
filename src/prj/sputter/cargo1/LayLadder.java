@@ -57,12 +57,10 @@ public class LayLadder extends Ladder {
 	};
 	
 	private final Runnable event_epilogue = ()->{
-		LogStream.getInstance().usePool(false);
-		
+		LogStream.getInstance().usePool(false);		
 		final Dumping tsk = new Dumping();
-		tsk.TAG1 = StepMonitor.action_name;
-		
-		PanBase.self(this).notifyTask(tsk);
+		tsk.TAG1 = StepMonitor.action_name;		
+		PanBase.self(this).SpinnerTask("傾倒資料",tsk);
 	};
 	//-----------------------------------------
 	

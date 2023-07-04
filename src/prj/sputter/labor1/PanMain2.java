@@ -57,7 +57,7 @@ public class PanMain2 extends PanBase {
 		String arg;
 		arg = Gawain.prop().getProperty("modbus", "");
 		if(arg.length()!=0) {			
-			coup.open(arg);			
+			coup.open(arg,0);			
 		}
 		dcg1.open();
 		spik.open();

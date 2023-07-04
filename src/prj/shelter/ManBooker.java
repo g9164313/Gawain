@@ -336,11 +336,11 @@ public class ManBooker extends BorderPane {
 		tabs.get(ss[1]).visibleProperty().bind(rad_stng[1].selectedProperty());
 		tabs.get(ss[2]).visibleProperty().bind(rad_stng[2].selectedProperty());
 		
-		JFXButton btn_import = new JFXButton("匯入");
+		JFXButton btn_import = new JFXButton("匯入標定表");
 		btn_import.getStyleClass().add("btn-raised-1");
 		btn_import.setOnAction(e->{
 			final FileChooser dia = new FileChooser();
-			dia.setTitle("匯入標定");
+			dia.setTitle("匯入標定表");
 			dia.setInitialDirectory(Gawain.getSockFile());
 			final File fs = dia.showOpenDialog(getScene().getWindow());
 			if(fs.isFile()==true) {
@@ -348,7 +348,7 @@ public class ManBooker extends BorderPane {
 			}
 		});
 		
-		JFXButton btn_export = new JFXButton("試算表");
+		JFXButton btn_export = new JFXButton("匯出試算表");
 		btn_export.getStyleClass().add("btn-raised-1");
 		btn_export.setOnAction(e->{
 			final FileChooser dia = new FileChooser();
@@ -360,7 +360,7 @@ public class ManBooker extends BorderPane {
 			}
 			final PanBase pan = PanBase.self(this);
 			final TskExport tsk = new TskExport(fs,this);
-			pan.notifyTask(tsk);
+			pan.SpinnerTask("--task--",tsk);
 		});
 		
 		HBox lay1 = new HBox();

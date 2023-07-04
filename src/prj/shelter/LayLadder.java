@@ -20,7 +20,7 @@ public class LayLadder extends Ladder {
 		addStep("原點補償", RadiateStep.Reset.class);
 		addStep(RadiateLoca.NAME, RadiateLoca.class);
 		addStep(RadiateDose.NAME, RadiateDose.class);
-		genButton("校正程序",e->{
+		/*genButton("校正程序",e->{
 			final DevHustIO.Strength[] lst_ss = quest_strength();
 			final String M_TIME = quest_meas_time();
 			if(lst_ss==null||M_TIME==null) {
@@ -51,7 +51,7 @@ public class LayLadder extends Ladder {
 					((RadiateDose)stp).setValues(dose, M_TIME, ss, true, true, true);					
 				}
 			}			
-		});
+		});*/
 		
 		//main_kits.getChildren().addAll(	new Separator());
 	}

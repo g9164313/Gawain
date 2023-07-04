@@ -20,6 +20,7 @@ import narl.itrc.PadTouch;
 /**
  * access motor servo by Modbus/RTU.<p>
  * This object access 3 servo, 1 SDE and 2 SDA series.<p> 
+ * TODO: refactory this object!!!!!!
  * @author qq
  *
  */
@@ -80,14 +81,14 @@ public class ModInsider extends DevModbus {
 		
 		coup = dev;
 		
-		looperDelay = 250;//good delay~~
+		//looperDelay = 250;//good delay~~
+	
+		//mapAddress16(ID_EC4310,"h031-038");
+		PV_COND = mapFloat(/*ID_EC4310,*/ 0x035);
+		PV_TEMP = mapFloat(/*ID_EC4310,*/ 0x037);
 		
-		mapAddress16(ID_EC4310,"h031-038");
-		PV_COND = mapFloat(ID_EC4310, 0x035);
-		PV_TEMP = mapFloat(ID_EC4310, 0x037);
-		
-		mapAddress16(ID_FA231,"h08A");
-		PV_FA231 = mapInteger(ID_FA231, 0x08A);
+		//mapAddress16(ID_FA231,"h08A");
+		PV_FA231 = mapShort(/*ID_FA231,*/ 0x08A);
 		
 		//SDA系列
 		//內部  - 註解        - Modbus地址
@@ -95,27 +96,27 @@ public class ModInsider extends DevModbus {
 		//	  - 瞬時轉矩(%)  - 0x000F
 		//	  - 異常警報     - 0x0100
 		//    - PIN port - 0x0203
-		mapAddress16(ID_PRESS,"h0006","h000F","h0100","h0203");
-		PRESS_RPM = mapInteger(ID_PRESS, 0x0006);		
-		PRESS_TOR = mapInteger(ID_PRESS, 0x000F);
-		PRESS_ALM = mapInteger(ID_PRESS, 0x0100);
-		PRESS_PIN = mapInteger(ID_PRESS, 0x0203);
+		//mapAddress16(ID_PRESS,"h0006","h000F","h0100","h0203");
+		PRESS_RPM = mapShort(/*ID_PRESS,*/ 0x0006);		
+		PRESS_TOR = mapShort(/*ID_PRESS,*/ 0x000F);
+		PRESS_ALM = mapShort(/*ID_PRESS,*/ 0x0100);
+		PRESS_PIN = mapShort(/*ID_PRESS,*/ 0x0203);
 		
-		mapAddress16(ID_SWING,"h0006","h000F","h0100","h0203");
-		SWING_RPM = mapInteger(ID_SWING, 0x0006);
-		SWING_TOR = mapInteger(ID_SWING, 0x000F);
-		SWING_ALM = mapInteger(ID_SWING, 0x0100);
-		SWING_PIN = mapInteger(ID_SWING, 0x0203);
+		//mapAddress16(ID_SWING,"h0006","h000F","h0100","h0203");
+		SWING_RPM = mapShort(/*ID_SWING,*/ 0x0006);
+		SWING_TOR = mapShort(/*ID_SWING,*/ 0x000F);
+		SWING_ALM = mapShort(/*ID_SWING,*/ 0x0100);
+		SWING_PIN = mapShort(/*ID_SWING,*/ 0x0203);
 		
 		//SDE系列
 		//內部  - 註解        - Modbus地址
 		//     - 瞬時轉速(RPM)- 0x0008 (2word)
 		//	   - 瞬時轉矩(%)  - 0x001A (2word) 
 		//	   - 異常警報     - 0x0100
-		mapAddress16(ID_MAJOR,"h008","h01A","h100");
-		MAJOR_RPM = mapInteger(ID_MAJOR, 0x0008);
-		MAJOR_TOR = mapInteger(ID_MAJOR, 0x001A);
-		MAJOR_ALM = mapInteger(ID_MAJOR, 0x0100);
+		//mapAddress16(ID_MAJOR,"h008","h01A","h100");
+		MAJOR_RPM = mapShort(/*ID_MAJOR,*/ 0x0008);
+		MAJOR_TOR = mapShort(/*ID_MAJOR,*/ 0x001A);
+		MAJOR_ALM = mapShort(/*ID_MAJOR,*/ 0x0100);
 	}
 	
 	public final IntegerProperty MAJOR_RPM_SV = new SimpleIntegerProperty();
@@ -132,17 +133,18 @@ public class ModInsider extends DevModbus {
 	//private static final int SDA_ADDR_POS = 0x310;//PA17 - 位置圈數(REV)
 	private static final int SDA_ADDR_POS = 0x311;//PA18 - 位置脈波數(PULSE)
 	
+	
 	@Override
-	protected void ignite() {
+	protected void ignite_task() {
 		
-		final int V_PRESS_RPM1 = readReg(ID_PRESS,'I',SDA_ADDR_RPM);
-		final int V_PRESS_POS1 = readReg(ID_PRESS,'I',SDA_ADDR_POS);
+		final int V_PRESS_RPM1 = 0;//readRegVal(ID_PRESS,'I',SDA_ADDR_RPM);
+		final int V_PRESS_POS1 = 0;//readRegVal(ID_PRESS,'I',SDA_ADDR_POS);
 				
-		final int V_SWING_RPM1 = readReg(ID_SWING,'I',SDA_ADDR_RPM);
-		final int V_SWING_POS1 = readReg(ID_SWING,'I',SDA_ADDR_POS);
+		final int V_SWING_RPM1 = 0;//readRegVal(ID_SWING,'I',SDA_ADDR_RPM);
+		final int V_SWING_POS1 = 0;//readRegVal(ID_SWING,'I',SDA_ADDR_POS);
 		
 		//PC05 - 速度1(RPM)
-		final int V_MAJOR_RPM1 = readReg(ID_MAJOR, 'I', 0x0508);
+		final int V_MAJOR_RPM1 = 0;//readRegVal(ID_MAJOR, 'I', 0x0508);
 		
 		OTHER_ZSP.bind(PRESS_ZSP.and(SWING_ZSP));
 		OTHER_CMDOK.bind(PRESS_CMDOK.and(SWING_CMDOK));
@@ -160,12 +162,12 @@ public class ModInsider extends DevModbus {
 		//B11-B10-B09-B08-B07-B06-B05-B04-B03-B02-B01-B00
 		//CDP- TL- ? - ? -LOP-EMG-SP1-RES-ST2-ST1-SP2-SON
 		//0:外部配線，1:內部暫存器
-		writeCont_sid(ID_MAJOR, 0x061E, 0x0FFF);
+		//writeCont_sid(ID_MAJOR, 0x061E, 0x0FFF);
 		//SDE 內部接點狀態（速度模式）- PD25
 		//B11-B10-B09-B08-B07-B06-B05-B04-B03-B02-B01-B00
 		//CDP- TL- ? - ? -LOP-EMG-SP1-RES-ST2-ST1-SP2-SON
 		//0:on，1:off
-		writeCont_sid(ID_MAJOR, 0x0630, 0x0000);
+		//writeCont_sid(ID_MAJOR, 0x0630, 0x0000);
 
 		Application.invokeLater(()->{
 			
@@ -178,7 +180,6 @@ public class ModInsider extends DevModbus {
 			SWING_RPM_SV.set(V_SWING_RPM1/SPD_DECAY);
 			SWING_PLS_SV.set(V_SWING_POS1);
 		});
-		super.ignite();//goto next stage~~~~
 	}
 	//-------------------------------------------//
 
@@ -360,6 +361,20 @@ public class ModInsider extends DevModbus {
 			Thread.sleep(msec);//????
 		} catch (InterruptedException e) {
 		}
+	}
+
+	public void writeCont_sid(final int s_id,final int addr,final int val) {
+		//TODO:re-implement this function!!!!
+		/*implSlaveID(s_id);
+		short[] buff = { (short)(val&0xFFFF) };
+		int res = 0;
+		do{
+			res = implWrite(addr,buff);
+			if(res>0) {
+				break;
+			}
+			block_sleep_msec(50);
+		}while(true);*/
 	}
 }
 

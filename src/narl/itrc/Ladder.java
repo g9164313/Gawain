@@ -9,6 +9,7 @@ import java.util.Scanner;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXListView;
+import com.sun.glass.ui.Application;
 
 import javafx.animation.Animation;
 import javafx.animation.Timeline;
@@ -17,6 +18,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Orientation;
+import javafx.scene.Node;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -201,6 +203,20 @@ public class Ladder extends BorderPane {
 		step_kits.getChildren().add(btn);
 		return this;
 	}
+
+	public Stepper genStep(final String name){
+		if(step_kits==null) {
+			return null;
+		}
+		for(Node nod:step_kits.getChildren()){
+			final ChunkData chuk = (ChunkData)nod.getUserData();
+			if(chuk.clzz.getName().equals(name)==true){
+				return chuk.instance();
+			}
+		}
+		return null;
+	}
+
 	//--------------------------------//
 	
 	protected JFXListView<Stepper> recipe = new JFXListView<Stepper>();
@@ -288,7 +304,7 @@ public class Ladder extends BorderPane {
 				for(Stepper ss:lst) {
 					ss.prepare(); 
 				}
-				lst.get(0).first_trig();
+				lst.get(0).next_to_first();
 			}
 		}		
 	}
@@ -343,28 +359,33 @@ public class Ladder extends BorderPane {
 			@Override
 			protected Integer call() throws Exception {
 				Scanner stm = new Scanner(fid);
-				int l_id = 0;
 				while(stm.hasNextLine()==true){
-					l_id+=1;
-					String txt = stm.nextLine().replace("\r\n", "");
-					if(txt.matches(".*[>].*[@].*")==false){
-						updateMessage("無法解析的內文: L"+l_id);
+					final String txt = stm.nextLine().replace("\r\n","");
+					final int pos = txt.indexOf("-->");
+					//if(txt.matches(".*[-][-][>].*")==false){
+					if(pos<=0){
+						updateMessage("無法解析的內文:"+txt);
 						continue;
-					}
-					final String[] arg = txt.split("[>]|[@]");//TODO!!!!
-					/*final StpWrapper typ = getPack(arg[2].trim());
-					if(typ==null){
-						Misc.loge("[Ladder] 找不到 class - %s",arg[2]);
-						continue;
-					}
-					Application.invokeLater(()->typ.instance().expand(arg[1].trim()));
-					updateMessage(String.format("匯入 %s", arg[0]));*/
+					}					
+					final String clzz_name = txt.substring(0, pos);
+					final String args_text = txt.substring(pos+1).trim();
+					Application.invokeLater(()->{
+						Stepper stp = genStep(clzz_name);
+						if(stp==null){
+							updateMessage("無法產生:"+clzz_name);
+							return;
+						}
+						stp.expand(args_text);
+						recipe.getItems().add(stp);
+						recipe.scrollTo(stp);
+					});
+					updateMessage(String.format("匯入 %s", clzz_name));
 				}
 				stm.close();
 				return 3;
 			}
 		};
-		pan.notifyTask(tsk);
+		pan.SpinnerTask("匯入階梯圖",tsk);
 	}
 	
 	protected void export_step(){
@@ -383,25 +404,19 @@ public class Ladder extends BorderPane {
 						"匯出中 %2d/%2d",
 						i+1, lst.size()
 					));
-					final Stepper stp = lst.get(i);//TODO:!!!!
-					/*final StpWrapper wpp = getPack(stp);
-					if(wpp==null){
-						Misc.loge("[Ladder] 找不到 class - %s",stp.toString());
-						continue;
-					}
+					final Stepper stp = lst.get(i);
 					out.write(String.format(
-						"%s> %s @ %s", 
-						wpp.name, 
-						stp.flatten(), 
-						wpp.clzz.getName()
-					));*/
+						"%s-->%s",
+						stp.getClass().getName(),
+						stp.flatten()
+					));
 					out.write("\r\n");
 				}				
 				out.close();
 				return 0;
 			}
 		};
-		pan.notifyTask(tsk);		
+		pan.SpinnerTask("匯出階梯圖",tsk);		
 	}
 	//--------------------------------//
 }

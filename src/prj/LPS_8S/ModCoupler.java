@@ -112,7 +112,7 @@ public class ModCoupler extends DevModbus {
 	public JFXToggleButton tglSlurryPump;
 	
 	@Override
-	protected void ignite() {
+	protected void ignite_task() {
 		//before looping, insure setting~~~
 		lockclub(false);
 		
@@ -128,10 +128,12 @@ public class ModCoupler extends DevModbus {
 		// 1000 -->  0~20mA
 		// 1001 -->-20~20mA
 		// 1010 -->  4~20mA
-		writeVals(AIN1_PRG1,0x8030);
-		writeVals(AIN1_PRG2,0x8030);
-		writeVals(AIN2_PRG1,0x8038);
-		writeVals(AIN2_PRG2,0x8038);
+		writeRegPair(
+			AIN1_PRG1,0x8030, 
+			AIN1_PRG2,0x8030, 
+			AIN2_PRG1,0x8038, 
+			AIN2_PRG2,0x8038
+		);
 		
 		//program AO2 SF/PAC
 		//writeVals(AOUT_PRG1,0x8030);//init-code
@@ -145,9 +147,9 @@ public class ModCoupler extends DevModbus {
 		//writeSet(DOUT_ADDR2,0);//卡榫退出
 		
 		//implReadI(DOUT_ADDR1,dv1);
-		final int dinn = readReg('H',DINN_ADDR);
-		final int dout1= readReg('I',DOUT_ADDR1);
-		final int dout2= readReg('I',DOUT_ADDR2);
+		final int dinn = readRegVal('H',DINN_ADDR);
+		final int dout1= readRegVal('I',DOUT_ADDR1);
+		final int dout2= readRegVal('I',DOUT_ADDR2);
 		final boolean[] dout = {
 			(dout1&0x1)!=0,//抽水幫浦和止水汽缸
 			(dout1&0x2)!=0,//加熱器
@@ -189,9 +191,9 @@ public class ModCoupler extends DevModbus {
 			toggle(tglDoneAlarm ,dout[2]);
 			toggle(tglSlurryHeat,dout[1]);
 			toggle(tglSlurryPump,dout[0]);
-		});		
-		super.ignite();//goto next stage~~~~
+		});
 	}
+
 	private void toggle(final JFXToggleButton obj, final boolean flg) {
 		if(obj==null) {
 			return;
@@ -256,9 +258,9 @@ public class ModCoupler extends DevModbus {
 		final float dw_volt = (10f*dw_force)/9f;
 		Misc.logv("apply volt(up,dw)=%.3f,%.3f", up_volt, dw_volt);
 		asyncBreakIn(()->{
-			writeVals(AOUT_ARM_BASE_DW_UP, 0, 0);//洩壓
-			blocking_delay(100);
-			writeVals(AOUT_ARM_BASE_DW_UP, IBIL_V(dw_volt), IBIL_V(up_volt));//加壓
+			writeRegVal(AOUT_ARM_BASE_DW_UP, 0, 0);//洩壓
+			block_sleep_msec(100);
+			writeRegVal(AOUT_ARM_BASE_DW_UP, IBIL_V(dw_volt), IBIL_V(up_volt));//加壓
 		});
 	}
 	public void cyliApplyForceUp(final float value) {
@@ -276,23 +278,23 @@ public class ModCoupler extends DevModbus {
 		}
 		final float volt = v;
 		asyncBreakIn(()->{
-			writeVals(addr, IBIL_V(volt));
-			blocking_delay(100);
+			writeRegVal(addr, IBIL_V(volt));
+			block_sleep_msec(100);
 		});
 	}
 	public void cyliForceRelease() {asyncBreakIn(()->{
 			cyli_force_release();
 	});}
 	private void cyli_force_release() {
-		writeVals(AOUT_ARM_BASE_DW_UP, 0, 0);//洩壓
-		blocking_delay(500);
+		writeRegVal(AOUT_ARM_BASE_DW_UP, 0, 0);//洩壓
+		block_sleep_msec(500);
 	}
 	private void cyli_force_setpoint(final float[][] sp) {
 		for(int i=0; i<sp.length; i++) {
 			final int v_dw = IBIL_V((sp[i][0]*10f)/9f);
 			final int v_up = IBIL_V((sp[i][1]*10f)/9f);
-			writeVals(AOUT_ARM_BASE_DW_UP, v_dw, v_up);
-			blocking_delay((int)sp[i][2]);
+			writeRegVal(AOUT_ARM_BASE_DW_UP, v_dw, v_up);
+			block_sleep_msec((int)sp[i][2]);
 		}
 	}
 	private Runnable act_arm_up = ()->{asyncBreakIn(()->{
@@ -381,9 +383,9 @@ public class ModCoupler extends DevModbus {
 		asyncBreakIn(()->{	
 			while(flag_move.get()==true) {
 				writeSet(DOUT_ADDR2,bit);
-				blocking_delay(25);
+				block_sleep_msec(25);
 				writeCls(DOUT_ADDR2,bit);
-				blocking_delay(25);
+				block_sleep_msec(25);
 			}
 		});
 	};
@@ -391,13 +393,13 @@ public class ModCoupler extends DevModbus {
 		if(tgl.isSelected()==true) {
 			asyncBreakIn(()->{
 				writeSet(DOUT_ADDR2,2);//LOP
-				blocking_delay(200);
+				block_sleep_msec(200);
 				writeSet(DOUT_ADDR2,3);//ST1
 			});	
 		}else {
 			asyncBreakIn(()->{
 				writeCls(DOUT_ADDR2,3);//ST1
-				blocking_delay(4000);
+				block_sleep_msec(4000);
 				writeCls(DOUT_ADDR2,2);//LOP
 			});	
 		}
@@ -405,30 +407,37 @@ public class ModCoupler extends DevModbus {
 	
 	public void dout_pin(
 		final JFXToggleButton tgl,
-		int bit
+		final int op_bit
 	) {
-		int addr = -1;
-		if(bit>=4) {
+		final int addr;
+		final int bit;
+		if(op_bit>=4) {
 			//bit4-7
-			addr = DOUT_ADDR2;
-			bit-=4;
+			addr= DOUT_ADDR2;
+			bit = op_bit-4;
 		}else {
 			//bit0~3
 			addr = DOUT_ADDR1;
+			bit = op_bit;
 		}
 		if(tgl.isSelected()==true) {
-			asyncWriteSet(addr, bit);
+			asyncBreakIn(()->writeSet(addr,bit));
 		}else {
-			asyncWriteCls(addr, bit);
+			asyncBreakIn(()->writeCls(addr,bit));
 		}		
 	}
 
-	private void blocking_delay(final int msec) {
-		try {
-			Thread.sleep(msec);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+	public void writeCls(final int addr,final int bit) {
+		short[] buff = {0};
+		implReadI(addr,buff);
+		buff[0] = (short)((buff[0] & ~(1<<bit)) & 0xFFFF);
+		implWrite(addr,buff);
+	}
+	public void writeSet(final int addr,final int bit) {
+		short[] buff = {0};
+		implReadI(addr,buff);
+		buff[0] = (short)((buff[0] |  (1<<bit)) & 0xFFFF);
+		implWrite(addr,buff);
 	}
 }
 

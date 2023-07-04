@@ -17,7 +17,7 @@ public class RadiateDose extends RadiateStep {
 		box_dose.setOnAction(e->{			
 		});
 		chk_trac.disableProperty().bind(chk_meas.selectedProperty().not());
-		set(op_init,
+		chain(op_init,
 			op_move_pallet, op_wait_pallet, 
 			op_make_radiate, 
 			op_prewarm, op_make_measure, op_wait_measure,
@@ -60,13 +60,13 @@ public class RadiateDose extends RadiateStep {
 		final String txt = box_loca.getText();
 		if(txt.length()==0||txt.contains("?")) {
 			Misc.loge("[RadiateDose] wrong location - %s", txt);
-			abort_step();
+			//abort_step();
 		}else {
-			next_step();
+			//next_step();
 		}
 	};
 	final Runnable op_foot = () -> {
-		next_step();
+		//next_step();
 		if(chk_trac.isSelected()==true) {
 			trace_cnt+=1;
 			if(trace_cnt<=TRACE_MAX) {
@@ -121,7 +121,7 @@ public class RadiateDose extends RadiateStep {
 			return "ERROR!!, NO MARK!!";
 		}
 		
-		next_step(this.op_foot,this.op_move_pallet);
+		//next_step(this.op_foot,this.op_move_pallet);
 		return "TRY!! "+next_loca;
 	}
 	

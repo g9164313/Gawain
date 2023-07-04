@@ -263,7 +263,7 @@ public class LayPogsql extends BorderPane {
 				return 0;
 			}
 		};
-		((PanBase)(getParent().getUserData())).notifyTask(tsk);
+		((PanBase)(getParent().getUserData())).SpinnerTask("--task--",tsk);
 	}
 	
 	void searchy_text(){

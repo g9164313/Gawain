@@ -107,7 +107,7 @@ public class DataBridge{
 				e1.printStackTrace();
 			}
 		});
-		Gawain.mainPanel.notifyTask(tsk);
+		//Gawain.mainPanel.Spinnerk(tsk);
 	}
 	
 	class FetchLastProdx extends Task<Stuff[][]>{
@@ -187,7 +187,7 @@ public class DataBridge{
 				e1.printStackTrace();
 			}
 		});
-		Gawain.mainPanel.notifyTask(tsk);
+		Gawain.mainPanel.SpinnerTask("--task--",tsk);
 	}
 	public void list_last_prodx(
 		final String code1,
@@ -204,7 +204,7 @@ public class DataBridge{
 				e1.printStackTrace();
 			}
 		});
-		Gawain.mainPanel.notifyTask(tsk);
+		Gawain.mainPanel.SpinnerTask("--task--",tsk);
 	}
 
 	private Optional<Connection> link = Optional.empty();
@@ -322,7 +322,7 @@ public class DataBridge{
 				return 0;
 			}
 		};
-		Gawain.mainPanel.notifyTask(tsk);
+		Gawain.mainPanel.SpinnerTask("--task--",tsk);
 	}
 	
 	private static Optional<DataBridge> self = Optional.empty();

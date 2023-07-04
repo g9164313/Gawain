@@ -45,17 +45,17 @@ public class PadChoise<T> extends PanDialog<T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	boolean set_result_and_close(ButtonType type) {
+	protected boolean set_result_and_close(ButtonType type) {
 		if(type!=ButtonType.OK) {
 			setResult(null);
 		}else {
-        	Toggle tgl = grp.getSelectedToggle();
-        	if(tgl==null) {
-        		//user don't select any options~~~
-        		setResult(null);
-        	}else {
-        		setResult((T)tgl.getUserData());
-        	}
+      Toggle tgl = grp.getSelectedToggle();
+      if(tgl==null) {
+       //user don't select any options~~~
+       setResult(null);
+      }else {
+       setResult((T)tgl.getUserData());
+      }
 		}
 		return true;
 	}	

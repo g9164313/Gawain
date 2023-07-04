@@ -124,7 +124,7 @@ public class PanMain extends PanBase {
 	private BooleanProperty startMotorMajor = new SimpleBooleanProperty(true);
 	private BooleanProperty startMotorOther = new SimpleBooleanProperty(true);
 	
-	private NotifyEvent[] e_working = {
+	private SpinnerEvent[] e_working = {
 		/*(lad,dlg)->{
 			dlg.setText("確認[拆模磁簧]");//1:沒卡，0:卡住
 			//ladderJump(lad,3);
@@ -152,7 +152,7 @@ public class PanMain extends PanBase {
 			}
 		},
 	};
-	private final NotifyEvent[] e_halting = {
+	private final SpinnerEvent[] e_halting = {
 		(lad,dlg)->{
 			if(startMotorMajor.get()==false) { return; }
 			dlg.setText("停止主軸");
@@ -172,7 +172,7 @@ public class PanMain extends PanBase {
 			toggle_btn(coup.tglDoneAlarm,false);
 		},
 	};
-	private final NotifyEvent[] e_halting_alarm = {
+	private final SpinnerEvent[] e_halting_alarm = {
 		(lad,dlg)->{
 			dlg.setText("停止旋轉");
 			toggle_btn(tglMotorMajor,false);
@@ -369,7 +369,7 @@ public class PanMain extends PanBase {
 			.title("計時")
 			.textSize(TextSize.BIGGER)
 			.timePeriod(java.time.Duration.ofSeconds(-1L))
-			.onAlarm(e->notifyEvent(e_halting_alarm))
+			.onAlarm(e->SpinnerLadder(e_halting_alarm))
 			.build();
 		tile[0].setOnMouseClicked(e->{
 			final PadTouch pad = new PadTouch('T',"時：分：秒");

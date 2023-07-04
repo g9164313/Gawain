@@ -87,36 +87,35 @@ public abstract class StepCommon extends Stepper {
 	protected final Runnable shutter_close = ()->{		
 		final String tag = "關閉擋板";
 		show_mesg(tag);
-		wait_async();
-		sqm1.shutter(false,()->{
-			Misc.logv(tag);
-			notify_async();
-		}, ()->{
-			Misc.logv(tag+"失敗");
-			abort();
-			
-			final Alert dia = new Alert(AlertType.WARNING);
-			dia.setTitle("！！警告！！");
-			dia.setHeaderText("無法"+tag);
-			dia.showAndWait();
+		wait_breakin_hook(sqm1,()->{
+			sqm1.shutter(false,()->{
+				Misc.logv(tag);
+			}, ()->{
+				Misc.logv(tag+"失敗");
+				abort();
+				final Alert dia = new Alert(AlertType.WARNING);
+				dia.setTitle("！！警告！！");
+				dia.setHeaderText("無法"+tag);
+				dia.showAndWait();
+			});
 		});
 	};
 	
 	protected final Runnable shutter_open = ()->{		
 		final String tag = "開啟擋板";
 		show_mesg(tag);
-		wait_async();
-		sqm1.shutter_and_zeros(true,()->{
-			Misc.logv(tag);
-			notify_async();
-		}, ()->{
-			Misc.logv(tag+"失敗");
-			abort();
-			
-			final Alert dia = new Alert(AlertType.WARNING);
-			dia.setTitle("！！警告！！");
-			dia.setHeaderText("無法"+tag);
-			dia.showAndWait();
+		wait_breakin_hook(sqm1,()->{
+			sqm1.shutter_and_zeros(true,()->{
+				Misc.logv(tag);
+			}, ()->{
+				Misc.logv(tag+"失敗");
+				abort();
+				
+				final Alert dia = new Alert(AlertType.WARNING);
+				dia.setTitle("！！警告！！");
+				dia.setHeaderText("無法"+tag);
+				dia.showAndWait();
+			});
 		});
 	};
 	
@@ -128,27 +127,25 @@ public abstract class StepCommon extends Stepper {
 	protected final Runnable spik_get_pulse = ()->{
 		final String tag = "設定脈衝";
 		show_mesg(tag);
-		wait_async();
-		spik.asyncGetRegister(pay->{
-			t_on_pos = pay.getValue(0);
-			t_off_pos= pay.getValue(1);
-			t_on_neg = pay.getValue(2);
-			t_off_neg= pay.getValue(3);
-			notify_async();
-		}, 4, 4);
-		trig(this.spik_get_pulse);
+		wait_breakin_hook(spik,()->{
+			spik.asyncGetRegister(pay->{
+				t_on_pos = pay.getValue(0);
+				t_off_pos= pay.getValue(1);
+				t_on_neg = pay.getValue(2);
+				t_off_neg= pay.getValue(3);
+			}, 4, 4);
+		});
 	};
 	
 	protected final Runnable spik_apply_pulse = ()->{
 		final String tag = "設定脈衝";
 		show_mesg(tag);
-		wait_async();
-		spik.setPulseValue(tkn->{
-				notify_async();
-			}, 
-			t_on_pos, t_off_pos, 
-			t_on_neg, t_off_neg
-		);
+		wait_breakin_hook(spik,()->{
+			spik.setPulseValue(tkn->{ Misc.logv(tag+":setPulseValue:"); }, 
+				t_on_pos, t_off_pos, 
+				t_on_neg, t_off_neg
+			);
+		});
 	};
 	
 	protected final Runnable spik_running = ()->{		
@@ -167,17 +164,11 @@ public abstract class StepCommon extends Stepper {
 	protected final Runnable turn_on = ()->{
 		final String tag = "啟動 DCG";		
 		show_mesg(tag);
-		wait_async();
-		dcg1.asyncBreakIn(()->{
-			if(dcg_power>0) {
-				dcg1.exec("CHL=W");
-				dcg1.exec("SPW="+dcg_power);
-				dcg1.exec("SPR="+dcg_t_rise);//unit is millisecond
-			}
-			{
-				dcg1.exec("TRG");
-			}
-			notify_async();
+		wait_breakin(dcg1,()->{
+			dcg1.exec("CHL=W");
+			dcg1.exec("SPW="+dcg_power);
+			dcg1.exec("SPR="+dcg_t_rise);//unit is millisecond
+			dcg1.exec("TRG");
 		});
 	};
 	protected final Runnable turn_on_dummy = ()->{
@@ -223,13 +214,10 @@ public abstract class StepCommon extends Stepper {
 	
 	protected final Runnable turn_off = ()->{
 		show_mesg("關閉高壓");
-		wait_async();		
-		dcg1.asyncBreakIn(()->{
+		wait_breakin(dcg1,()->{
 			if(dcg1.exec("OFF").endsWith("*")==false) {
 				abort();
 				Application.invokeLater(()->PanBase.notifyError("失敗", "無法關閉!!"));
-			}else {
-				notify_async();
 			}
 		});
 		//TODO: goto next step!!!

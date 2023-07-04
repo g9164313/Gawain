@@ -37,7 +37,6 @@ import jssc.SerialPortTimeoutException;
 import narl.itrc.DevTTY;
 import narl.itrc.Gawain;
 import narl.itrc.Misc;
-import prj.sputter.DevDCG100;
 
 @SuppressWarnings("unused")
 public class DevShapeoko extends DevTTY {

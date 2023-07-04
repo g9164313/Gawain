@@ -10,7 +10,7 @@ public class RadiateLoca extends RadiateStep {
 		box_loca.setOnAction(e->{
 		});
 		box_dose.setDisable(true);		
-		set(op_init, 
+		chain(op_init, 
 			op_move_pallet, op_wait_pallet, 
 			op_make_radiate, 
 			op_prewarm, op_make_measure, op_wait_measure,
@@ -37,10 +37,10 @@ public class RadiateLoca extends RadiateStep {
 	
 	final Runnable op_init = () -> {
 		box_loca.getOnAction().handle(null);
-		next_step();
+		//next_step();
 	};
 	final Runnable op_foot = () -> {
-		next_step();
+		//next_step();
 		if(chk_mark.isSelected()==true) {
 			booker.insert(hustio, at5350);
 		}

@@ -20,24 +20,26 @@ public abstract class PanDialog<T> extends Dialog<T> {
 		DialogPane pan = new DialogPane() {
 			@Override
 			protected Node createButton(ButtonType buttonType) {
-				final JFXButton button = new JFXButton(buttonType.getText());				
-				button.setPrefSize(48.*3., 48);				
+				final JFXButton btn = new JFXButton(buttonType.getText());				
+				btn.setPrefSize(48.*3., 48);				
 				if(buttonType==ButtonType.OK) {
-					button.getStyleClass().addAll("btn-raised-3","font-console");
+					btn.getStyleClass().addAll("btn-raised-3","font-console");
 				}else if(buttonType==ButtonType.CANCEL) {
-					button.getStyleClass().addAll("btn-raised-1","font-console");
+					btn.getStyleClass().addAll("btn-raised-1","font-console");
 				}
 				final ButtonData buttonData = buttonType.getButtonData();
-				ButtonBar.setButtonData(button, buttonData);
-		        button.setDefaultButton(buttonType != null && buttonData.isDefaultButton());
-		        button.setCancelButton(buttonType != null && buttonData.isCancelButton());
-		        button.addEventHandler(ActionEvent.ACTION, ae -> {
-		            if (ae.isConsumed()) return;
-		            if(set_result_and_close(buttonType)==true) {
-		            	close();
-		            }
-		        });
-				return button;
+				ButtonBar.setButtonData(btn, buttonData);
+		    btn.setDefaultButton(buttonType != null && buttonData.isDefaultButton());
+		    btn.setCancelButton(buttonType != null && buttonData.isCancelButton());
+		    btn.addEventHandler(ActionEvent.ACTION, ae -> {
+		      if(ae.isConsumed()==true){
+						return;
+					} 
+		      if(set_result_and_close(buttonType)==true) {
+		      	close();
+		      }
+		    });
+				return btn;
 			}			
 		};
 		pan.getStylesheets().add(Gawain.sheet);
@@ -48,6 +50,12 @@ public abstract class PanDialog<T> extends Dialog<T> {
 		pan.setContent(node);
 		
 		setDialogPane(pan);
+		setOnCloseRequest(event->{
+			T res = getResult();
+			if(res instanceof ButtonType){
+				setResult(null);//user only click close button
+			}
+		});	
 	} 
 		
 	public interface EventOption<T> {
@@ -68,7 +76,7 @@ public abstract class PanDialog<T> extends Dialog<T> {
 		event.callback((T)obj);
 	}
 	
-	abstract boolean set_result_and_close(ButtonType type);
+	protected abstract boolean set_result_and_close(ButtonType type);
 	
 	//--------------------------------------------
 	
@@ -93,7 +101,7 @@ public abstract class PanDialog<T> extends Dialog<T> {
 		}
 		
 		@Override
-		boolean set_result_and_close(ButtonType type) {			
+		protected boolean set_result_and_close(ButtonType type) {			
 			if(type.equals(ButtonType.OK)) {				
 				setResult(box.getText());
 				return true;

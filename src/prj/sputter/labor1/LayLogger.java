@@ -74,7 +74,7 @@ public class LayLogger extends BorderPane {
 			if(fs==null) {
 				return;
 			}
-			PanBase.self(this).notifyTask("輸出紀錄",new Dumping(fs));
+			PanBase.self(this).SpinnerTask("輸出紀錄",new Dumping(fs));
 		});
 		final JFXButton btn_rever = new JFXButton("rever");
 		btn_rever.getStyleClass().add("btn-raised-1");
@@ -387,10 +387,7 @@ public class LayLogger extends BorderPane {
 	
 	public void done_progress() {
 		LogStream.getInstance().usePool(false);
-		PanBase.self(this).notifyTask(
-			"輸出紀錄",
-			new Dumping()
-		);
+		PanBase.self(this).SpinnerTask("輸出紀錄", new Dumping());
 	}
 	//-----------------------------------------------//
 	

@@ -25,7 +25,7 @@ public class PadNumber extends PanDialog<String> {
 	}
 
 	@Override
-	boolean set_result_and_close(ButtonType type) {
+	protected boolean set_result_and_close(ButtonType type) {
 		String txt = screen.getText();
 		if(txt.length()==0) {
 			setResult(null);

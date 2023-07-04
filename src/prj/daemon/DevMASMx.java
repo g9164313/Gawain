@@ -2,15 +2,15 @@ package prj.daemon;
 
 import java.math.BigDecimal;
 
+import javafx.beans.property.FloatProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.geometry.Pos;
+import javafx.beans.property.SimpleFloatProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import narl.itrc.DevModbus;
 
 /**
@@ -22,33 +22,39 @@ import narl.itrc.DevModbus;
 public class DevMASMx extends DevModbus {
 	
 	public final IntegerProperty DP,STATUS,AZ,HOLD,MAX,DISPLAY;
-	public final String title;
-
-	public DevMASMx(final String name){
-		title = name;
-		mapAddress(16,
-			"h0000",
-			"h0040-0048"
-		);
-		DP     = mapInteger(0x0000);
-		STATUS = mapInteger(0x0040);
-		AZ     = mapInteger(0x0042);
-		HOLD   = mapInteger(0x0044);
-		MAX    = mapInteger(0x0046);
-		DISPLAY= mapInteger(0x0048);
+	
+	public final FloatProperty  num_display = new SimpleFloatProperty();
+	public final StringProperty txt_display = new SimpleStringProperty("？？？？");
+	
+	@Override
+	protected void looper_event(){
+		final int dp = DP.get();
+		BigDecimal val = BigDecimal.valueOf(DISPLAY.get());
+		val = val.movePointLeft(dp);
+		num_display.set(val.floatValue());
+		txt_display.set(val.toString());
 	}
 
-	public static Pane genInfoPanel(final DevMASMx dev){
+	public DevMASMx(){
+		this("MA-SM3");
+	}
+	public DevMASMx(final String tag){
+		TAG = tag;
+		mapAddress(16,"h0001","h0006","h002A-0031");
+		STATUS = mapShort(0x0001);
+		DP     = mapShort(0x0006);		
+		AZ     = mapInteger(0x002A);
+		HOLD   = mapInteger(0x002C);
+		MAX    = mapInteger(0x002E);
+		DISPLAY= mapInteger(0x0030);
+	}
 
-		final Label txt_display = new Label();
-		txt_display.setMinWidth(40f);		
-		txt_display.getStyleClass().addAll("font-size4");
-		dev.DISPLAY.addListener((obv,oldVal,newVal)->{
-			final int dp = dev.DP.get();
-			BigDecimal num = BigDecimal.valueOf(dev.DISPLAY.get());
-			num = num.movePointLeft(dp);
-			txt_display.setText(num.toString());
-		});
+	public static Pane genInfoPanel(final String title, final DevMASMx dev){
+
+		final Label txt_disp = new Label();
+		//txt_disp.setMinWidth(178.);		
+		//txt_disp.getStyleClass().addAll("font-size4");
+		txt_disp.textProperty().bind(dev.txt_display);
 
 		final Label[] txt = {
 			new Label(), new Label(), new Label(),//STATUS text
@@ -58,27 +64,35 @@ public class DevMASMx extends DevModbus {
 		txt[2].textProperty().bind(dev.AZ.asString());
 		//-----------------
 
-		final HBox sts1 = new HBox(new Label("MAX"),txt[0]);
+		/*final HBox sts1 = new HBox(new Label("MAX："),txt[0]);
 		sts1.visibleProperty().bind(dev.STATUS.isEqualTo(8));//MAX - 顯示最大保持值
-		sts1.setAlignment(Pos.CENTER_LEFT);
+		//sts1.setAlignment(Pos.CENTER_LEFT);
 		
-		final HBox sts2 = new HBox(new Label("HOLD"),txt[1]);
+		final HBox sts2 = new HBox(new Label("HOLD："),txt[1]);
 		sts2.visibleProperty().bind(dev.STATUS.isEqualTo(4));//HOLD - 顯示保持值
-		sts2.setAlignment(Pos.CENTER_LEFT);
 		
 		final HBox sts3 = new HBox(new Label("AZ："),txt[2]);
 		sts3.visibleProperty().bind(dev.STATUS.isEqualTo(2));//AZ - 自動歸零值
-		sts3.setAlignment(Pos.CENTER_LEFT);
 
-		final Label sts4 = new Label("Lock");
+		final Label sts4 = new Label("Lock！！");
 		sts4.visibleProperty().bind(dev.STATUS.isEqualTo(1));//Lock
 
-		final VBox lay0 = new VBox(
-			new Label(dev.title),
-			txt_display,
-			new StackPane(sts1, sts2, sts3, sts4)
-		); 
-		lay0.getStyleClass().addAll("box-pad");
-		return lay0;
+		final Label sts5 = new Label("work");
+		sts5.visibleProperty().bind(dev.STATUS.isEqualTo(0));//Lock*/
+
+
+		final Label txt_dp = new Label();
+		txt_dp.textProperty().bind(dev.DP.asString("DP:%d"));
+		final Label txt_sta = new Label();
+		txt_sta.textProperty().bind(dev.STATUS.asString("STA:%d"));
+		final Label txt_dsp = new Label();
+		txt_dsp.textProperty().bind(dev.DISPLAY.asString("DIS:%d"));
+
+		final GridPane lay = new GridPane();
+		lay.getStyleClass().addAll("box-pad");
+		lay.add(new Label(title+"數值："), 0, 0, 2, 1);
+		lay.add(txt_disp, 0, 1, 2, 1);
+		lay.add(new Separator(), 0, 2, 2, 1);
+		return lay;
 	}
 }

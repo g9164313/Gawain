@@ -14,5 +14,6 @@
 		"exclude": [
 			"/home/qq/labor/tools/netty-4.1.93.jar"
 		]
-	}
+	}	
+	"gitlens.blame.annotation.activeLine": "off"
 }

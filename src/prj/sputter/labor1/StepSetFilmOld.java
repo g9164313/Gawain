@@ -53,8 +53,7 @@ public class StepSetFilmOld extends StepCommon {
 	public final TextField box_sensor  = args[7];
 	
 	final Runnable op1 = ()->{
-		//set film data and final thickness		
-		wait_async();
+		//set film data and final thickness
 		final String[] vals = {
 			args[1].getText().trim(),//density
 			args[2].getText().trim(),//tooling
@@ -64,8 +63,7 @@ public class StepSetFilmOld extends StepCommon {
 			args[6].getText().trim(),//time set-point (mm:ss)
 			args[7].getText().trim(),//active sensor
 		};
-		sqm1.asyncBreakIn(()->{
-			//reset film data, include its tooling and final thick
+		wait_breakin(sqm1,()->{
 			String cmd = String.format(
 				"A%C%s %s %s %s %s %s %s %s",
 				(char)(1+48), "__TEMP__", 
@@ -77,20 +75,17 @@ public class StepSetFilmOld extends StepCommon {
 				Application.invokeLater(()->PanBase.notifyError("失敗", "無法設定薄膜參數!!"));
 				return;
 			}
-			notify_async();
 		});
 	};
 	
-	final Runnable op2 = ()->{	
-		wait_async();
+	final Runnable op2 = ()->{		
 		show_mesg("切換中");
-		sqm1.asyncBreakIn(()->{
+		wait_breakin(sqm1,()->{
 			if(sqm1.exec("D1").charAt(0)!='A') {
 				abort();
 				Application.invokeLater(()->PanBase.notifyError("失敗", "無法使用薄膜參數!!"));
 				return;
 			}
-			notify_async();
 		});
 	};
 	

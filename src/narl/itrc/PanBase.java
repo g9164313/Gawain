@@ -173,11 +173,12 @@ public abstract class PanBase {
 			icon = new JFXSpinner();
 
 			mesg.setMinWidth(100);
-			mesg.setFont(Font.font("Arial", 26));
+			mesg.getStyleClass().add("font-size3");
 			mesg.setAlignment(Pos.BASELINE_LEFT);
 			
 			prog.setMinWidth(33);
-			prog.setFont(Font.font("Arial", 26));
+			prog.getStyleClass().add("font-size3");
+			//prog.setFont(Font.font("Arial", 26));
 			prog.setAlignment(Pos.BASELINE_RIGHT);
 			
 			final HBox lay = new HBox(icon,mesg,prog);
@@ -190,7 +191,7 @@ public abstract class PanBase {
 		}
 	};
 	
-	protected static interface NotifyEvent {
+	public static interface SpinnerEvent {
 		void action(final Timeline ladder,final Spinner dialog);
 	};
 	
@@ -213,7 +214,7 @@ public abstract class PanBase {
 	 * For skipping backward visit keyframe, combine 'playFromStart' and 'jumpTo'.<p>
 	 * @param event - extend KeyFrame Interface.
 	 */
-	public void notifyEvent(NotifyEvent... event) {
+	public void SpinnerLadder(SpinnerEvent... event) {
 		final Spinner dialog = new Spinner();
 		final Timeline ladder = new Timeline();		
 		ladder.setCycleCount(0);
@@ -232,11 +233,51 @@ public abstract class PanBase {
 		dialog.show((StackPane)root());
 	}
 
+	public DevBase SpinnerBreakIn(
+		final String txt,
+		final DevBase dev,
+		final Runnable workStart,
+		final Runnable eventShow
+	){
+		if(workStart==null){
+			return dev;
+		}
+		final Spinner dlg = new Spinner();
+		dlg.mesg.setText(txt);		
+		dlg.setOnDialogOpened(e1->{
+			final Timeline chk = new Timeline();
+			chk.getKeyFrames().add(0, new KeyFrame(
+				Duration.millis(100.),
+				e2->{
+					System.out.printf("[Spinner] break-in=%B\n", dev.isBreakOut());
+					if(dev.isBreakOut()==true){
+						chk.stop();
+						dlg.close();
+					}
+				}
+			));
+			chk.setCycleCount(Timeline.INDEFINITE);
+			chk.play();
+			dev.asyncBreakIn(workStart);			
+		});
+		dlg.setOnDialogClosed(e1->{
+			final Timeline chk = new Timeline();
+			chk.getKeyFrames().add(0, new KeyFrame(
+				Duration.millis(500.),
+				e2->eventShow.run()
+			));
+			chk.setCycleCount(1);
+			chk.play();
+		});
+		dlg.show((StackPane)root());
+		return dev;
+	}
+
 	/**
 	 * show a spinner, let user know we are working.<p>
 	 * @param task - a working thread.<p>
 	 */
-	public Task<?> notifyTask(
+	public Task<?> SpinnerTask(
 		final String name,
 		final Task<?> task
 	) {
@@ -257,9 +298,6 @@ public abstract class PanBase {
 		dlg.setOnDialogClosed(e->task.cancel());
 		dlg.show((StackPane)root());
 		return task;
-	}
-	public Task<?> notifyTask(final Task<?> task) {
-		return notifyTask("--task--",task);
 	}
 	//----------------------------------------------//
 	

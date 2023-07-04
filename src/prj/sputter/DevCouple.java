@@ -86,8 +86,8 @@ public class DevCouple extends DevModbus {
 		init_flow_property();
 	}
 
-	@Override
-	protected void ignite() {
+	//@Override
+	//protected void ignite_task() {
 		
 		//writeVals(8008,0x8030,0x8030,0x8030,0x8030);//input channel setting
 		
@@ -107,9 +107,7 @@ public class DevCouple extends DevModbus {
 		//Misc.logv("#8012=0x%04X",v2);
 		
 		//init_flow_prop();
-		
-		super.ignite();//goto next stage~~~~
-	}
+	//}
 	
 	//-------------------------------//
 	
@@ -158,10 +156,10 @@ public class DevCouple extends DevModbus {
 	public void asyncAanlogOut(final int cid, final float mvolt){
 		final int val = (int)(mvolt * 1000f);
 		switch(cid){
-		case 1: asyncBreakIn(()->writeVals(8006,val)); break;
-		case 2: asyncBreakIn(()->writeVals(8007,val)); break;
-		case 3: asyncBreakIn(()->writeVals(8008,val)); break;
-		case 4: asyncBreakIn(()->writeVals(8009,val)); break;
+		case 1: asyncBreakIn(()->writeRegVal(8006,val)); break;
+		case 2: asyncBreakIn(()->writeRegVal(8007,val)); break;
+		case 3: asyncBreakIn(()->writeRegVal(8008,val)); break;
+		case 4: asyncBreakIn(()->writeRegVal(8009,val)); break;
 		}
 	}
 	//-------------------------------//
@@ -222,7 +220,7 @@ public class DevCouple extends DevModbus {
 			volt = 0f;
 		}
 		int mvolt = (int)(volt * 1000f);//IB IL format
-		writeVals(aout_addr,mvolt);
+		writeRegVal(aout_addr,mvolt);
 	}
 	
 	public void set_all_mass_flow(
@@ -351,7 +349,7 @@ public class DevCouple extends DevModbus {
 		final boolean gun1
 	) {
 		if(polar==true) {
-			writeVals(8005, 1);//bipolar - Gun1 and Gun2
+			writeRegVal(8005, 1);//bipolar - Gun1 and Gun2
 		}else{
 			int val = 2;
 			if(gun1==true) {
@@ -359,7 +357,7 @@ public class DevCouple extends DevModbus {
 			}else{
 				val = val | 8;//gun-2
 			}
-			writeVals(8005, val);//unipolar - Gun1 or Gun2
+			writeRegVal(8005, val);//unipolar - Gun1 or Gun2
 		}
 	}
 	
@@ -372,14 +370,14 @@ public class DevCouple extends DevModbus {
 	});}
 	
 	public void asyncMotorPump(final int dir) {	asyncBreakIn(()->{
-		int val = readReg('H',8010);
+		int val = readRegVal('H',8010);
 		val = val & 0xFC0;
 		if(dir<0) {
 			val = val | 0x01;			
 		}else if(dir>0) {
 			val = val | 0x02;
 		}
-		writeVals(8010, val);
+		writeRegVal(8010, val);
 	});}
 }
 

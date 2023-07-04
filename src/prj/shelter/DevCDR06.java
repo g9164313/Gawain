@@ -97,7 +97,6 @@ public class DevCDR06 extends DevModbus {
 	public float getValHumidity() { return ch_val[1].getValue(); }
 	public float getValTemperature() { return ch_val[2].getValue(); }
 
-	@Override
 	protected void ignite(){
 		/**
 		 * CDR06 holding register:
@@ -130,6 +129,6 @@ public class DevCDR06 extends DevModbus {
 				);
 			}
 		});
-		super.ignite();//goto next stage~~~~
+		
 	}	
 }

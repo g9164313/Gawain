@@ -28,9 +28,33 @@ public class PropBundle extends HashMap<String, PropBundle.ObjPack>{
 			self= arg1;
 		}
 	};
+	
+	public PropBundle(){
+	}
 
 	public PropBundle(Object... args){
-
+		int cnt = args.length;
+		cnt = cnt - cnt%2;
+		for(int i=0; i<cnt; i+=2){
+			final Object oa = args[i+0];
+			final Object ob = args[i+1];
+			if(oa instanceof String){
+				final String name = (String)oa;
+				if(ob instanceof BooleanProperty){
+					pack(name,(BooleanProperty)ob);
+				}else if(ob instanceof IntegerProperty){
+					pack(name,(IntegerProperty)ob);
+				}else if(ob instanceof FloatProperty){
+					pack(name,(FloatProperty)ob);
+				}else if(ob instanceof Ladder){
+					pack(name,(Ladder)ob);
+				}else if(ob instanceof Runnable){
+					pack(name,(Runnable)ob);
+				}else{
+					System.out.printf("Unknow object: %s @ %s\n", name, ob.toString());
+				}
+			}
+		}
 	}
 
 	public PropBundle pack(final String name, final BooleanProperty obj){
