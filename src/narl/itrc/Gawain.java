@@ -195,29 +195,13 @@ public class Gawain extends Application {
 		getResource("res/styles.css").
 		toExternalForm();		
 	public static final String jarName;
+	public static final String strRoot;
 	public static final File dirRoot;
 	
 	public static String getRootPath() {
 		return dirRoot.getAbsolutePath()+File.separatorChar;
 	}
-	public static String getSockPath() {
-		//old path, in home directory, named ".gawain"
-		String path = Misc.getHomePath() + ".gawain" + File.separatorChar;
-		if(new File(path).exists()==false) {
-			return getRootPath();
-		}
-		return path;
-	}
-	public static File getSockFile() {
-		//old path, in home directory, named ".gawain"
-		final String path = Misc.getHomePath() + ".gawain" + File.separatorChar;
-		final File fs = new File(path);
-		if(fs.exists()==false) {
-			return fs;
-		}
-		return dirRoot;
-	}
-	
+
 	static {
 		URI uri = null;
 		try {
@@ -242,12 +226,10 @@ public class Gawain extends Application {
 			jarName = "";
 			path = Misc.getHomePath() + ".gawain" + File.separatorChar;
 			if(new File(path).exists()==false){
-				if(fs.mkdirs()==false){
-					System.err.printf("we can't create sock-->%s!!\n",path);
-					System.exit(-2);
-				}
+				path = new File(".").getAbsolutePath();
 			}
 		}
+		strRoot = path;
 		dirRoot = new File(path);
 	}
 }

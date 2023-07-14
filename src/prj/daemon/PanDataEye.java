@@ -2,7 +2,6 @@ package prj.daemon;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.lang.reflect.Constructor;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -13,7 +12,6 @@ import java.time.format.DateTimeFormatter;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTabPane;
-import com.jfoenix.controls.JFXToggleButton;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -38,14 +36,13 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
+
 import narl.itrc.Gawain;
-import narl.itrc.Ladder;
 import narl.itrc.Misc;
 import narl.itrc.PanBase;
 import narl.itrc.Stepper;
@@ -73,7 +70,7 @@ public class PanDataEye extends PanBase {
 		sens2.open(sens1, 2);
 		masm1.open(sens1,11);
 		masm2.open(sens1,12);
-		recorder.playFromStart();
+		//recorder.playFromStart();
 	}
 
 	@Override
@@ -96,9 +93,6 @@ public class PanDataEye extends PanBase {
 			));
 		};
 
-		final JFXToggleButton btn_switch = new JFXToggleButton();
-		btn_switch.setText("歷史紀錄");
-
 		final JFXComboBox<Duration> cmb_period = new JFXComboBox<Duration>();
 		cmb_period.setConverter(combo2text);
 		cmb_period.getItems().addAll(gen_list_combo());
@@ -110,7 +104,6 @@ public class PanDataEye extends PanBase {
 			recorder.stop();
 			reset_keyframe(cmb_period,event_record);
 			recorder.playFromStart();
-			btn_switch.setSelected(true);
 		});
 
 		final JFXButton btn_clear = new JFXButton("清除");
@@ -132,14 +125,14 @@ public class PanDataEye extends PanBase {
 			recorder.play();
 		});
 
-		final JFXButton btn_halt = new JFXButton("停止");
-		btn_halt.getStyleClass().add("btn-raised-2");
-		btn_halt.setMaxWidth(Double.MAX_VALUE);
-		btn_halt.disableProperty().bind(recorder.statusProperty().isEqualTo(Status.RUNNING).not());
-		btn_halt.setOnAction(e->{
+		final JFXButton btn_s_done = new JFXButton("停止");
+		btn_s_done.getStyleClass().add("btn-raised-2");
+		btn_s_done.setMaxWidth(Double.MAX_VALUE);
+		btn_s_done.disableProperty().bind(recorder.statusProperty().isEqualTo(Status.RUNNING).not());
+		btn_s_done.setOnAction(e->{
 			recorder.stop();
 		});
-
+		
 		final JFXButton btn_export = new JFXButton("匯出");
 		btn_export.getStyleClass().add("btn-raised-1");
 		btn_export.setMaxWidth(Double.MAX_VALUE);
@@ -150,7 +143,7 @@ public class PanDataEye extends PanBase {
 			}
 			final FileChooser dia = new FileChooser();
 			dia.setTitle("匯出試算表");
-			dia.setInitialDirectory(Gawain.getSockFile());
+			dia.setInitialDirectory(Gawain.dirRoot);
 			final File fs = dia.showSaveDialog(scene().getWindow());
 			if(fs==null) {
 				return;
@@ -160,10 +153,12 @@ public class PanDataEye extends PanBase {
 		//--------------------------------------
 
 		final VBox lay3 = new VBox(
-			btn_switch, cmb_period, 
-			btn_clear, btn_sample, btn_halt, btn_export
+			new Label("取樣週期"), cmb_period, 
+			btn_sample, btn_s_done, 
+			btn_export, btn_clear
 		);
 		lay3.getStyleClass().addAll("box-pad");
+
 		final GridPane lay4 = new GridPane();
 		lay4.getStyleClass().addAll("box-pad");
 		lay4.addRow(0, 
@@ -174,26 +169,26 @@ public class PanDataEye extends PanBase {
 			Misc.addBorder(DevFYx00.genInfoPanel("溫度.2",sens2)), 
 			Misc.addBorder(DevMASMx.genInfoPanel("電流",masm2))
 		);
-		lay4.visibleProperty().bind(btn_switch.selectedProperty().not());
-		final VBox lay5 = new VBox(cc1_2,cc11,cc12);
-		lay5.prefHeightProperty().bind(lay4.heightProperty());
-		lay5.visibleProperty().bind(btn_switch.selectedProperty());
 
 		final BorderPane lay2 = new BorderPane();
 		lay2.setLeft(lay3);
-		lay2.setCenter(new StackPane(lay4,lay5));
+		lay2.setCenter(lay4);
 		//--------------------------------------
 
-		final Ladder lay6 = new Ladder();
-		lay6.prelogue = ()->btn_sample.getOnAction().handle(null);
-		lay6.addStep("溫度控制.1", AdjustTemp.class, sens1);
-		lay6.addStep("溫度控制.2", AdjustTemp.class, sens2);
+		final VBox lay5 = new VBox(cc1_2,cc11,cc12);
+		lay5.prefHeightProperty().bind(lay4.heightProperty());
+
+		//final Ladder lay6 = new Ladder();
+		//lay6.prelogue = ()->btn_sample.getOnAction().handle(null);
+		//lay6.epilogue = ()->btn_s_done.getOnAction().handle(null);
+		//lay6.addStep("溫度控制.1", AdjustTemp.class, sens1);
+		//lay6.addStep("溫度控制.2", AdjustTemp.class, sens2);
 		//--------------------------------------
 
 		final JFXTabPane lay1 = new JFXTabPane();
 		lay1.getTabs().addAll(
 			new Tab("監測",lay2),
-			new Tab("製程",lay6)
+			new Tab("歷史",lay5)
 		);
 		lay1.getSelectionModel().select(0);
 		return lay1;		
@@ -301,15 +296,17 @@ public class PanDataEye extends PanBase {
 		}
 		final Label txt_proc = new Label("----");
 		final Label txt_left = new Label("--:--:--");
-		final TextField box_setv = new TextField("30");
-		final TextField box_time = new TextField("5:00");
+		final TextField box_setv = new TextField("100");
+		final TextField box_time = new TextField("1:00");
 
 		final Runnable op0 = ()->{
 			final String txt = box_setv.getText();
 			final float val = Float.valueOf(txt);
+			txt_proc.setText("write");
 			dev.asyncBreakIn(()->{
-				dev.writeRegVal(0x0000, (int)(val*10.));
+				dev.writeForce(0x0000,(short)(val*10.));	
 			},()->{
+				txt_proc.setText("done!");
 				next_to(this.op1);
 			});
 		};

@@ -157,7 +157,7 @@ public class DevModbus extends DevBase {
 				}
 				looper_event();
 			});
-			block_sleep_msec(50);
+			block_sleep_msec(200);
 		});
 		playFlow(STG_IGNITE);
 	}
@@ -503,31 +503,34 @@ public class DevModbus extends DevBase {
 		});
 	}
 	//-------------------------------------//
-	
-	public short[] readRegVal(final char fid,final int addr,final int size) {		
-		short[] val = new short[size];
+
+	public void readRegVal(final char fid,final int addr,final short[] regs){
 		char _fid = Character.toUpperCase(fid);
 		try {
 			sema.acquire();
 			implSlaveID(slave);		
 			switch(_fid) {
 			case 'C'://coils, function code = 1
-				implReadC(addr,val);
+				implReadC(addr,regs);
 				break;
-			case 'S'://input status, function code = 2
-				implReadS(addr,val);
+			case 'S'://discrete input, function code = 2
+				implReadS(addr,regs);
 				break;
 			case 'H'://holding register, function code = 3
-				implReadH(addr,val);
+				implReadH(addr,regs);
 				break;				
 			case 'I'://input register, function code = 4
-				implReadI(addr,val);
+				implReadI(addr,regs);
 				break;
 			}
 			sema.release();
 		} catch (InterruptedException e) {
 			System.err.printf("[%s][readRegVal] %s\n", TAG, e.getMessage());
 		}
+	}
+	public short[] readRegVal(final char fid,final int addr,final int size) {		
+		short[] val = new short[size];
+		readRegVal(fid,addr,val);
 		return val;
 	}
 	public int readRegVal(final char fid,final int addr){
@@ -535,37 +538,67 @@ public class DevModbus extends DevBase {
 		return ((int)val[0])&0x0000FFFF;
 	}
 
-	public void writeRegVal(final int addr, final short... value){
+	public int writeRegVal(final int addr, final short... value){
+		int res = 0;
 		try {
 			sema.acquire();
 			implSlaveID(slave);
-			implWrite(addr,value);
+			res = implWrite(addr,value);
+			sema.release();
+		} catch (InterruptedException e) {
+			System.err.printf("[%s][writeRegVal] %s\n", TAG, e.getMessage());
+			res = -100;
+		}
+		return res;
+	}
+	public int writeRegVal(final int addr, final int... value){
+		short[] val = new short[value.length];
+		for(int i=0; i<value.length; i++){
+			val[i] = (short)(value[i]&0xFFFF);
+		}
+		return writeRegVal(addr,val);
+	}
+	
+	public void writeForce(final int addr, final short... value){
+		try {
+			sema.acquire();
+			int res = 0;
+			do{
+				implSlaveID(slave);			
+				res = implWrite(addr,value);
+				if(res<0){
+					block_sleep_msec(10);
+				}
+			}while(res<0);
 			sema.release();
 		} catch (InterruptedException e) {
 			System.err.printf("[%s][writeRegVal] %s\n", TAG, e.getMessage());
 		}
 	}
-
-	public void writeRegVal(final int addr, final int... value){
+	public void writeForce(final int addr, final int... value){
 		short[] val = new short[value.length];
 		for(int i=0; i<value.length; i++){
 			val[i] = (short)(value[i]&0xFFFF);
 		}
-		writeRegVal(addr,val);
-	}
-	public void writeRegPair(final int... pair){
+		writeForce(addr,val);
+	}	
+
+	public int writeRegPair(final int... pair){
+		int res = 0;
 		try {
 			sema.acquire();
 			implSlaveID(slave);
 			for(int i=0; i<pair.length; i+=2){
 				int addr = pair[i+0];
 				short[] val = {(short)(pair[i+1]&0xFFFF)};				
-				implWrite(addr,val);
+				res = res | implWrite(addr,val);
 			}			
 			sema.release();
 		} catch (InterruptedException e) {
 			System.err.printf("[%s][writeRegVal] %s\n", TAG, e.getMessage());
+			res = -100;
 		}
+		return res;
 	}
 	//-------------------------------------//
 

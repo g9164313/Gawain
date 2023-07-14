@@ -149,7 +149,7 @@ public class LayLadder extends Ladder {
 								
 			FileOutputStream dst = new FileOutputStream(String.format(
 				"%s製程紀錄-%s.xlsx",
-				Gawain.getSockPath(),Misc.getDateName()
+				Gawain.strRoot,Misc.getDateName()
 			));
 			wb.write(dst);		
 			wb.close();
@@ -197,7 +197,7 @@ public class LayLadder extends Ladder {
 			if(msg==null){ return; }			
 			FileWriter fs = new FileWriter(String.format(
 				"%s製程紀錄-%s.txt",
-				Gawain.getSockPath(),Misc.getDateName()
+				Gawain.strRoot,Misc.getDateName()
 			));
 			updateMessage("匯出資料");
 			for(int i=0; i<msg.length; i++) {

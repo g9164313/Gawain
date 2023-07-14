@@ -239,7 +239,7 @@ public class LayAbacusOld extends BorderPane
 	
 	@SuppressWarnings("unchecked")
 	public void reloadLast() {
-		final String path = Gawain.getSockPath();
+		final String path = Gawain.strRoot;
 		final File fs = new File(path+MODEL_NAME);
 		if(fs.exists()==true) {
 			mmap = (HashMap<Strength, Model>)Misc.deserializeFile(fs);
@@ -260,7 +260,7 @@ public class LayAbacusOld extends BorderPane
 			return;//no marks, just a empty model
 		}
 		
-		final String path = Gawain.getSockPath();
+		final String path = Gawain.strRoot;
 		final File fs = new File(path+MODEL_NAME);
 		if(fs.exists()==true) {
 			final DateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss");			

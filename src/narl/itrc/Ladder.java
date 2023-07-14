@@ -83,7 +83,7 @@ public class Ladder extends BorderPane {
 		btn[5].getStyleClass().add("btn-raised-0");
 		btn[5].setGraphic(Misc.getIconView("pan_tool.png"));
 		btn[5].disableProperty().bind(sta.isEqualTo(0));
-		btn[5].setOnAction(e->{abort(); user_abort();});
+		btn[5].setOnAction(e->abort());
 		
 		final double min_w = 200.;
 		
@@ -286,7 +286,7 @@ public class Ladder extends BorderPane {
 	public void start(){
 		if(sta.get()==2) {
 			//go into run-state again from pause-state
-			sta.set(1);
+			sta.set(1);			
 			find_first_tailcall(Animation.Status.RUNNING);
 		}else {
 			//take the first running!!!			
@@ -301,6 +301,8 @@ public class Ladder extends BorderPane {
 				Misc.logv("[Ladder] 執行階梯圖");
 				sta.set(1);
 				//initialize the first data!!!
+				rest_all_beacon();
+				prelogue();
 				for(Stepper ss:lst) {
 					ss.prepare(); 
 				}
@@ -318,13 +320,12 @@ public class Ladder extends BorderPane {
 		sta.set(0);
 		find_first_tailcall(Animation.Status.STOPPED);
 		rest_all_beacon();
-		if(user_abort!=null) { user_abort.run(); }
+		epilogue();
 	}
 	//--------------------------------//
 	
 	public Runnable prelogue = null;	
 	public Runnable epilogue = null;
-	public Runnable user_abort = null;
 	private String uuid_text = "";//every running, we have a new UUID. 
 	
 	public String uuid() {
@@ -337,9 +338,6 @@ public class Ladder extends BorderPane {
 	protected void epilogue() {
 		if(epilogue!=null) { epilogue.run(); }
 		uuid_text = "";
-	}
-	protected void user_abort() {
-		//watchdog.getStatus();
 	}
 	//--------------------------------//
 	

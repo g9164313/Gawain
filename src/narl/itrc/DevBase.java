@@ -214,7 +214,7 @@ public abstract class DevBase implements Runnable {
 		is_emergent.set(false);
 	}
 
-	protected void block_sleep_msec(final long val) {
+	public void block_sleep_msec(final long val) {
 		try {
 			if(val<=0) { return; }
 			TimeUnit.MILLISECONDS.sleep(val);
@@ -222,7 +222,7 @@ public abstract class DevBase implements Runnable {
 		}
 	}
 	
-	protected void block_sleep_sec(final long val) {
+	public void block_sleep_sec(final long val) {
 		try {
 			if(val<=0) { return; }
 			TimeUnit.SECONDS.sleep(val);

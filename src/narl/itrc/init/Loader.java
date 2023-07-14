@@ -39,9 +39,8 @@ public class Loader {
 	
 	private static void check_sqlite_drv() {
 		try {
-			Misc.LoggerCon = DriverManager.getConnection(
-				"jdbc:sqlite:"+Gawain.getSockPath()+"logger.db"
-			);
+			Class.forName("org.sqlite.JDBC");//沒有這個會直接從OS載入JDBC？？？
+			Misc.LoggerCon = DriverManager.getConnection("jdbc:sqlite:"+Gawain.strRoot+"logger.db");
 			Misc.LoggerSta = Misc.LoggerCon.createStatement();
 			Misc.LoggerSta.setQueryTimeout(1);
 			Misc.LoggerSta.executeUpdate(
@@ -49,8 +48,8 @@ public class Loader {
 				"stmp TIMESTAMP DEFAULT (datetime('now','localtime')),"+
 				"tag TEXT NOT NULL,"+
 				"msg TEXT NOT NULL )"
-			);			
-		} catch (SQLException e) {
+			);
+		} catch (ClassNotFoundException | SQLException e) {
 			Misc.LoggerCon = null;
 			Misc.LoggerSta = null;
 			System.err.println(e.getMessage());

@@ -229,12 +229,14 @@ public abstract class Stepper extends HBox {
 	}
 
 	/**
-	 * jump to the next 'stepper'!!!
+	 * jump to the next 'stepper'!!!<p>
+	 * The final running in the stepper must call this method!!!.<p>
+	 * 每個 stepper 結束都要呼叫這個！！！<p> 
 	 * 
 	 * @param stepper
 	 */
 	protected void jump(final Stepper stepper) {
-		if (stepper == null) {
+		if (stepper==null) {
 			// end of all step!!!!
 			ladder.get().abort();
 			return;
@@ -247,9 +249,19 @@ public abstract class Stepper extends HBox {
 			stepper.next_to(stepper.fst_work);
 		});
 	}
+	/**
+	 * The final running in the stepper must call this method!!!.<p>
+	 * But this method will skip 'n' stepper.<p>
+	 * 每個 stepper 結束都要呼叫這個！！！<p> 
+	 * @param off
+	 */
 	protected void jump(final int off) {
 		jump(ladder.get().find_from(this, off));
 	}
+	/**
+	 * The final running in the stepper must call this method!!!.<p>
+	 * 每個 stepper 結束都要呼叫這個！！！<p> 
+	 */
 	protected void jump() {
 		jump(ladder.get().find_next(this));
 	}

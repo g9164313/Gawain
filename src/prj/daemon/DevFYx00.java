@@ -1,73 +1,96 @@
 package prj.daemon;
 
 import java.math.BigDecimal;
+
 import java.util.Optional;
 
 import com.sun.glass.ui.Application;
 
-import javafx.beans.binding.FloatBinding;
 import javafx.beans.property.FloatProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import narl.itrc.DevModbus;
-import narl.itrc.Gawain;
+import narl.itrc.PadChoise;
 import narl.itrc.PadTouch;
-import narl.itrc.PanBase;
 import narl.itrc.PanDialog;
 
 /**
  * PID controller for FA-TAIE.
- * Refer to: https://www.fa-taie.com.tw/admin/download/file/2014-12-31/54a3b0464a601.pdf
+ * Modbus 通訊位置，注意文件！！！，新舊版不同！！！
+ * Refer to: https://www.fa-taie.com.tw/admin/download/file/2022-04-06/624cf2980735f.pdf
+ * 操作使用手冊：
+ * Refer to: https://www.fa-taie.com.tw/admin/download/file/2022-04-06/624ceff4604de.pdf
  */
 public class DevFYx00 extends DevModbus {
 
-	public final IntegerProperty SV,OUT_P,OBIT,CT,PV,DP,UNIT;
-	public IntegerProperty SEG,TIMR;
+	/**
+	 * INP1:
+	 *  0-->K1:-50.0~ 600.0 度C (K型電偶)
+	 *  1-->K2:-50  ~1200.
+	 *  2-->J1:-50.0~ 400.0 度C
+	 *  3-->J2:-50  ~ 400. 
+	 */
+	public final IntegerProperty SV,SEG,TIMR,INP1,PV,LAP1;
 
 	public final FloatProperty  pv_val= new SimpleFloatProperty();
 	public final StringProperty pv_txt= new SimpleStringProperty("？？？？");
 	public final StringProperty sv_txt= new SimpleStringProperty("？？？？");
 
-	public final StringProperty INP1 = new SimpleStringProperty("？？？？");//輸入1 接的電偶級種類
-
 	@Override
 	protected void ignite_task(){
-		final int inp1 = readRegVal('I',0x0048);
+		writeRegVal(0x115, 1);//REMO: 開啟遠程控制
 		Application.invokeLater(()->{
-
+			LAP1.set(-1);
 		});
 	}
 
 	@Override
 	protected void looper_event(){
-		String unit = "?";
-		switch(UNIT.get()){
-		case 0: unit="C"; break;
-		case 1: unit="F"; break;
-		case 2: unit="A"; break;
+		final int inp1 = INP1.get();
+		final int pv_v = PV.get();
+		final int sv_v = SV.get();
+		switch(inp1){		
+		case 0:
+		case 2:
+		case 9:
+		case 14:
+			if(pv_v>=0x7FFF){
+				pv_val.set(0.f);
+				pv_txt.set("？？？？");
+			}else{
+				BigDecimal pp = BigDecimal.valueOf(pv_v);
+				pp = pp.movePointLeft(1);			
+				pv_val.set(pp.floatValue());
+				pv_txt.set(pp.toString());
+			}
+			BigDecimal ss = BigDecimal.valueOf(sv_v);
+			ss = ss.movePointLeft(1);
+			sv_txt.set(ss.toString());
+			break;
+		default:
+			if(pv_v>=0x7FFF){
+				pv_val.set(0.f);
+				pv_txt.set("？？？？");
+			}else{
+				pv_val.set(PV.floatValue());
+				pv_txt.set(String.format("%4d", pv_v));
+			}
+			sv_txt.set(String.format("%4d", sv_v));
+			break;
 		}
-		if(PV.get()!=0x7FFF){
-			BigDecimal pp = BigDecimal.valueOf(PV.get());
-			pp = pp.movePointLeft(DP.get());
-			pv_val.set(pp.floatValue());
-			pv_txt.set(pp.toString()+" "+unit);
-		}else{
-			pv_txt.set("!!ERROR!!");
-		}		
-		BigDecimal ss = BigDecimal.valueOf(SV.get());
-		ss = ss.movePointLeft(DP.get());
-		sv_txt.set(ss.toString()+" "+unit);
 	}
 
 	public DevFYx00(){
@@ -75,38 +98,73 @@ public class DevFYx00 extends DevModbus {
 	}
 	public DevFYx00(final String tag){
 		TAG = tag;
-		mapAddress(16,"h0000","h004B","h0066","h0087-008A");
-		SV   = mapShort(0x0000);//-999~9999		
-		//SEG  = mapShort(0x0007);
-		//TIMR = mapShort(0x0008);
-		DP   = mapShort(0x004B);//decimal point: 0->none, 1->.0, 2->.00, 3->.000
-		UNIT = mapShort(0x0066);//unit: 0-->C, 1-->F, 2-->A(角度？)
-		OUT_P= mapShort(0x0087);//0~1000, 輸出百分比，OUT%
-		OBIT = mapShort(0x0088);//狀態指示
-		CT   = mapShort(0x0089);//0~999
-		PV   = mapShort(0x008A);//-999~9999
+		mapAddress(16,"h000","h007-008","h048","h08A","h408");
+		SV  =mapShort(0x0000);//USPL~LSPL
+		SEG =mapShort(0x0007);//Prog. segment
+		TIMR=mapShort(0x0008);//Prog. timer left
+		INP1=mapShort(0x0048);//輸入類型與解析度
+		//OBIT=mapShort(0x0088);//狀態
+		PV  =mapShort(0x008A);//USPL~LSPL
+		LAP1=mapShort(0x0408);//狀態指示, PKE
 	}
 
-	public FloatBinding prop_num_SV(){
-		return SV.divide(10f);
-	}
-	public FloatBinding prop_num_PV(){
-		return PV.divide(10f);
+	private static void update_visible(final Node node, final int stas, final int bits){
+		if((stas&(1<<bits))!=0){
+			node.setVisible(true);
+		}else{
+			node.setVisible(false);
+		}	
 	}
 
 	public static Pane genInfoPanel(final String title, final DevFYx00 dev){
 
 		final Label txt_pv = new Label();
 		final Label txt_sv = new Label();
-
-		//GridPane.setHgrow(txt[1], Priority.ALWAYS);
-
 		txt_pv.textProperty().bind(dev.pv_txt);
 		txt_sv.textProperty().bind(dev.sv_txt);
 
-		final Button btn_setv = new Button("set value");
+		final Label[] txt_stas = {
+			new Label("OUT1"), new Label("OUT2"), new Label("ATun"), 
+			new Label("AL1 "), new Label("AL2 "), new Label("AL3 "), 
+			new Label(), new Label(), new Label()
+		};		
+		dev.LAP1.addListener((obv,oldVal,newVal)->{
+			final int stas = newVal.intValue();
+			update_visible(txt_stas[0], stas, 0);
+			update_visible(txt_stas[1], stas, 1);
+			update_visible(txt_stas[2], stas, 2);
+			update_visible(txt_stas[3], stas, 3);
+			update_visible(txt_stas[4], stas, 4);
+			update_visible(txt_stas[5], stas, 5);
+			txt_stas[7].setVisible(false);
+			txt_stas[8].setVisible(false);
+			if((stas&(1<<6))!=0){
+				txt_stas[6].setVisible(true);
+				txt_stas[7].setVisible(true);
+				txt_stas[8].setVisible(true);
+				if((stas&(1<<8))!=0){
+					txt_stas[6].setText("RUN ");
+				}else if((stas&(1<<9))!=0){
+					txt_stas[6].setText("END ");
+				}else if((stas&(1<<10))!=0){
+					txt_stas[6].setText("WALT");
+				}else if((stas&(1<<12))!=0){
+				}else{
+					txt_stas[6].setText("HALT");
+				}
+			}else if((stas&(1<<7))!=0){
+				txt_stas[6].setVisible(true);
+				txt_stas[6].setText("MAN ");
+			}else{
+				txt_stas[6].setVisible(false);
+			}
+		});
+		txt_stas[7].textProperty().bind(dev.SEG.asString("SEG%1d"));
+		txt_stas[8].textProperty().bind(dev.TIMR.asString("%04d"));
+
+
+		final Button btn_setv = new Button("指定 SV");
 		btn_setv.setMaxWidth(Double.MAX_VALUE);
-		GridPane.setHgrow(btn_setv, Priority.ALWAYS);
 		btn_setv.setOnAction(act->{
 			final PadTouch pad = new PadTouch('f',"SV數值");
 			Optional<String> opt = pad.showAndWait();			
@@ -114,86 +172,187 @@ public class DevFYx00 extends DevModbus {
 				return;
 			}
 			final String txt = opt.get();
-			final int org_DP = dev.DP.get();
+			final int inp1 = dev.INP1.get();
 			dev.asyncBreakIn(()->{
 				BigDecimal val = new BigDecimal(txt);
-				int cur_DP = val.scale();
-				int shift = 0;
-				if(org_DP>cur_DP){
-					shift = val.movePointRight(org_DP-cur_DP).intValue();
-				}else if(org_DP<=cur_DP){
-					shift = val.movePointRight(org_DP).intValue();
-				}
-				dev.writeRegVal(0x0000, shift);
-				//!!!We can't change DP register!!!
-				//dev.writeRegPair(
-				//	0x0000,shift,
-				//	0x004B,cur_DP
-				//);
+				switch(inp1){		
+					case 0:
+					case 2:
+					case 9:
+					case 14:
+						val = val.movePointRight(1);// multify 10
+						dev.writeForce(0x000,val.shortValue());//SV
+						break;
+					default:
+						dev.writeForce(0x000,val.shortValue());//SV
+						break;
+					}
 			});
 		});
+		GridPane.setHgrow(btn_setv, Priority.ALWAYS);
+
+		final Button btn_prog = new Button("程式");
+		btn_prog.setMaxWidth(Double.MAX_VALUE);
+		btn_prog.setOnAction(act->{
+			final short[] regs = new short[2*8*3];
+			dev.asyncBreakIn(()->{
+				//slow reading~~~ why???
+				short[] buf = new short[3];
+				for(int i=0; i<regs.length; i+=3){
+					dev.readRegVal('I', 0x09+i, buf);
+					System.arraycopy(buf, 0, regs, i, 3);	
+				}				
+			}, ()->{
+				PanProgForm pan = new PanProgForm(regs);
+				Optional<Integer> opt = pan.showAndWait();
+				if(opt.isPresent()==false){
+					return;
+				}
+				dev.asyncBreakIn(()->{
+					//don't dump all array once, why???
+					short[] buf = new short[3];
+					for(int i=0; i<regs.length; i+=3){
+						System.arraycopy(pan.regs, i, buf, 0, 3);	
+						dev.writeForce(0x09+i, buf);
+					}
+				});
+			});			
+		});
+		HBox.setHgrow(btn_prog, Priority.ALWAYS);
+
+		final Button btn_actn = new Button("動作");		
+		btn_actn.setMaxWidth(Double.MAX_VALUE);		
+		btn_actn.setOnAction(act->{
+			final String[] lst_cmd = {"啟動-RUN","暫停-HALT","下一組-JUMP", "停止-Reset"};
+			PadChoise<String> pad = new PadChoise<String>(lst_cmd);
+			Optional<String> opt = pad.showAndWait();
+			if(opt.isPresent()==false){
+				return;
+			}
+			final String cmd = opt.get();
+			dev.asyncBreakIn(()->{
+				if(cmd.equals(lst_cmd[0])==true){
+					dev.writeForce(0x409, (1<<8));
+				}else if(cmd.equals(lst_cmd[1])==true){
+					dev.writeForce(0x409, (1<<9));
+				}else if(cmd.equals(lst_cmd[2])==true){
+					dev.writeForce(0x409, (1<<10));
+				}else if(cmd.equals(lst_cmd[3])==true){
+					dev.writeForce(0x409, (1<<11));
+				}
+			});
+		});
+		HBox.setHgrow(btn_actn, Priority.ALWAYS);
 
 		final Button btn_edit = new Button("edit.");
 		btn_edit.setMaxWidth(Double.MAX_VALUE);
-		GridPane.setHgrow(btn_edit, Priority.ALWAYS);
 		btn_edit.setOnAction(act->dev.pop_editor());
-		
+		GridPane.setHgrow(btn_edit, Priority.ALWAYS);
+
 		final GridPane lay = new GridPane();
-		lay.setMinWidth(178.);
-		lay.getStyleClass().addAll("box-pad","font-size4");
+		lay.getStyleClass().addAll("box-pad");
 		lay.add(new Label(title), 0, 0, 2, 1);
 		lay.addRow(1, new Label("PV："), txt_pv);
-		lay.addRow(2, new Label("SV："), txt_sv);
+		lay.addRow(2, new Label("SV："), txt_sv);		
 		lay.add(new Separator(), 0, 3, 2, 1);
-		lay.add(btn_setv, 0, 6, 2, 1);
-		lay.add(btn_edit, 0, 7, 2, 1);
+		lay.add(btn_setv, 0, 4, 2, 1);
+		lay.add(new HBox(btn_prog,btn_actn), 0, 5, 2, 1);
+		lay.add(btn_edit, 0, 6, 2, 1);
+		
+		lay.add(new VBox(
+			txt_stas[0], 
+			txt_stas[1], 
+			txt_stas[2], 
+			txt_stas[3],
+			txt_stas[4],
+			txt_stas[5],
+			txt_stas[6],
+			txt_stas[7],
+			txt_stas[8]
+		), 3, 0, 1, 8);
+
 		return lay;
 	}
 	//--------virtual program--------//
 
-	/*private static class PanProgForm extends PanDialog<Integer>{
+	private static class PanProgForm extends PanDialog<Integer>{
+		TextField[][][] box;
+		public short[] regs = null;	
 		private void gen_box(){
-			box = new TextField[2][][];
+			box = new TextField[2][][];//channel
+			for(int i=0; i<2; i++){
+				box[i] = new TextField[8][];//segment
+				for(int j=0; j<8; j++){
+					box[i][j] = new TextField[3];//SV, TM, OUT
+					for(int k=0; k<3; k++){
+						TextField obj = new TextField();
+						obj.setPrefWidth(80.);
+						box[i][j][k] = obj;
+					}
+				}
+			}
+		}
+		private void reg2box(short[] val){
+			for(int i=0; i<2; i++){
+				for(int j=0; j<8; j++){
+					for(int k=0; k<3; k++){
+						int v = (int)(val[i*24+j*3+k]);
+						box[i][j][k].setText(String.valueOf(v));
+					}
+				}
+			}
 		}
 		private void box2reg(){
+			regs = new short[2*8*3];
+			for(int i=0; i<2; i++){
+				for(int j=0; j<8; j++){
+					for(int k=0; k<3; k++){						
+						final String txt = box[i][j][k].getText();
+						try{
+							regs[i*24+j*3+k] = Short.valueOf(txt);
+						}catch(NumberFormatException e){							
+						}
+					}
+				}
+			}
 		}
-		PanProgForm(short[][][] args){
-			reg=args;
+		PanProgForm(short[] val){
 			gen_box();
+			reg2box(val);
 			final GridPane lay = new GridPane();
-			lay.getStyleClass().addAll("box-pad","font-size4");
-			lay.addRow( 0, new Label("\\"  ), new Label("Ch.1"), new Label("")    , new Label("Ch.2"));
-			lay.addRow( 1, new Label("SV_1"), box[0][0][0]     , new Label("SV_1"), box[1][0][0]     );
-			lay.addRow( 2, new Label("TM_1"), box[0][0][1]     , new Label("TM_1"), box[1][0][1]     );
-			lay.addRow( 3, new Label("SV_2"), box[0][1][0]     , new Label("SV_2"), box[1][1][0]     );
-			lay.addRow( 4, new Label("TM_2"), box[0][1][1]     , new Label("TM_2"), box[1][1][1]     );
-			lay.addRow( 5, new Label("SV_3"), box[0][2][0]     , new Label("SV_3"), box[1][2][0]     );
-			lay.addRow( 6, new Label("TM_3"), box[0][2][1]     , new Label("TM_3"), box[1][2][1]     );
-			lay.addRow( 7, new Label("SV_4"), box[0][3][0]     , new Label("SV_4"), box[1][3][0]     );
-			lay.addRow( 8, new Label("TM_4"), box[0][3][1]     , new Label("TM_4"), box[1][3][1]     );
-			lay.addRow( 9, new Label("SV_5"), box[0][4][0]     , new Label("SV_5"), box[1][4][0]     );
-			lay.addRow(10, new Label("TM_5"), box[0][4][1]     , new Label("TM_5"), box[1][4][1]     );
-			lay.addRow(11, new Label("SV_6"), box[0][5][0]     , new Label("SV_6"), box[1][5][0]     );
-			lay.addRow(12, new Label("TM_6"), box[0][5][1]     , new Label("TM_6"), box[1][5][1]     );
-			lay.addRow(13, new Label("SV_7"), box[0][6][0]     , new Label("SV_7"), box[1][6][0]     );
-			lay.addRow(14, new Label("TM_7"), box[0][6][1]     , new Label("TM_7"), box[1][6][1]     );
-			lay.addRow(15, new Label("SV_8"), box[0][7][0]     , new Label("SV_8"), box[1][7][0]     );
-			lay.addRow(16, new Label("TM_8"), box[0][7][1]     , new Label("TM_8"), box[1][7][1]     );
+			lay.getStyleClass().addAll("box-pad");
+			lay.addRow( 0, 
+				new Label("**"), 
+				new Label("Ch.1"), new Label(""),  new Label(""),
+				new Label("Ch.2"), new Label(""),  new Label("")
+			);
+			lay.addRow( 1, 
+				new Label("||"), 
+				new Label("SV"),new Label("TM"),new Label("OUT"),
+				new Label("SV"),new Label("TM"),new Label("OUT")
+			);
+			for(int j=0; j<8; j++){
+				lay.addRow( j+2, 
+					new Label(String.format("%d", j+1)), 
+					box[0][j][0], box[0][j][1], box[0][j][2],
+					box[1][j][0], box[1][j][1], box[1][j][2]
+				);
+			}
 			init(lay);
 		}
 		@Override
 		protected boolean set_result_and_close(ButtonType type) {
 			if(type.equals(ButtonType.OK)) {
-				box2reg();			
+				box2reg();
 				setResult(box.length);
 				return true;
 			}else if(type.equals(ButtonType.CANCEL)){
-				setResult(0);
+				setResult(null);
 				return true;
 			}	
 			return false;
 		}
-	};*/
+	};
 	//------------------------------------
 
 	private static Object[][] MAP_INP1 = {

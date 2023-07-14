@@ -129,7 +129,7 @@ public class ManBooker extends BorderPane {
 	
 	private static final String DATA_NAME = "book.obj";
 	
-	private static final File DATA_FILE = new File(Gawain.getSockPath()+DATA_NAME);
+	private static final File DATA_FILE = new File(Gawain.dirRoot+DATA_NAME);
 	
 	//private HashMap<Strength,ArrayList<Mark>> database = new HashMap<Strength,ArrayList<Mark>>();
 	
@@ -341,7 +341,7 @@ public class ManBooker extends BorderPane {
 		btn_import.setOnAction(e->{
 			final FileChooser dia = new FileChooser();
 			dia.setTitle("匯入標定表");
-			dia.setInitialDirectory(Gawain.getSockFile());
+			dia.setInitialDirectory(Gawain.dirRoot);
 			final File fs = dia.showOpenDialog(getScene().getWindow());
 			if(fs.isFile()==true) {
 				//TODO:!!!!
@@ -353,7 +353,7 @@ public class ManBooker extends BorderPane {
 		btn_export.setOnAction(e->{
 			final FileChooser dia = new FileChooser();
 			dia.setTitle("匯出試算表");
-			dia.setInitialDirectory(Gawain.getSockFile());
+			dia.setInitialDirectory(Gawain.dirRoot);
 			final File fs = dia.showSaveDialog(getScene().getWindow());
 			if(fs==null) {
 				return;

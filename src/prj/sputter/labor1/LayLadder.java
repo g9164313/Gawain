@@ -32,9 +32,4 @@ public class LayLadder extends Ladder {
 		dcg1.asyncExec("OFF");//close power~~~
 		logger.done_progress();
 	}
-	@Override
-	protected void user_abort() {
-		Misc.logw("!!User Abort!!");
-		dcg1.asyncExec("OFF");
-	}
 }
